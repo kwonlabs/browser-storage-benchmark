@@ -1,34 +1,26 @@
 // Native Storage Worker
+import { generatePayloadString, measureOperation } from '../lib/benchmark';
 
 self.onmessage = async (e) => {
-    const { type, sizeName, payloadStr } = e.data;
+    const { type, sizeName, sizeValue } = e.data;
 
     if (type === 'start_native') {
         const results: Record<string, any> = {};
+        const str = generatePayloadString(sizeValue);
+        const modStr = str + 'modified';
+        const key = `bench_k_${sizeName}`;
 
         // Cache API
         try {
             const cache = await caches.open('bench-cache');
-            const url = '/bench-data';
+            const url = `/bench-data-${sizeName}`;
 
-            const insertStart = performance.now();
-            await cache.put(url, new Response(payloadStr));
-            const insertTime = performance.now() - insertStart;
-
-            const readStart = performance.now();
-            const resp = await cache.match(url);
-            if (resp) await resp.text();
-            const readTime = performance.now() - readStart;
-
-            const updateStart = performance.now();
-            await cache.put(url, new Response(payloadStr + 'modified'));
-            const updateTime = performance.now() - updateStart;
-
-            const deleteStart = performance.now();
-            await cache.delete(url);
-            const deleteTime = performance.now() - deleteStart;
-
-            results['Cache API'] = { insert: insertTime, read: readTime, update: updateTime, delete: deleteTime };
+            results['Cache API'] = {
+                insert: await measureOperation(sizeValue, async () => { const s = performance.now(); await cache.put(url, new Response(str)); return performance.now() - s; }),
+                read: await measureOperation(sizeValue, async () => { const s = performance.now(); const resp = await cache.match(url); if (resp) await resp.text(); return performance.now() - s; }),
+                update: await measureOperation(sizeValue, async () => { const s = performance.now(); await cache.put(url, new Response(modStr)); return performance.now() - s; }),
+                delete: await measureOperation(sizeValue, async () => { const s = performance.now(); await cache.delete(url); return performance.now() - s; })
+            };
         } catch (err: any) {
             results['Cache API'] = { insert: -1, read: -1, update: -1, delete: -1 };
         }
@@ -55,11 +47,12 @@ self.onmessage = async (e) => {
                 });
             };
 
-            const i = await runIdb('readwrite', s => s.put(payloadStr, 'k'));
-            const r = await runIdb('readonly', s => s.get('k'));
-            const u = await runIdb('readwrite', s => s.put(payloadStr + 'mod', 'k'));
-            const d = await runIdb('readwrite', s => s.delete('k'));
-            results['IndexedDB'] = { insert: i, read: r, update: u, delete: d };
+            results['IndexedDB'] = {
+                insert: await measureOperation(sizeValue, () => runIdb('readwrite', s => s.put(str, key))),
+                read: await measureOperation(sizeValue, () => runIdb('readonly', s => s.get(key))),
+                update: await measureOperation(sizeValue, () => runIdb('readwrite', s => s.put(modStr, key))),
+                delete: await measureOperation(sizeValue, () => runIdb('readwrite', s => s.delete(key)))
+            };
             db.close();
         } catch (err) {
             results['IndexedDB'] = { insert: -1, read: -1, update: -1, delete: -1 };
@@ -68,30 +61,36 @@ self.onmessage = async (e) => {
         // OPFS
         try {
             const root = await navigator.storage.getDirectory();
-            const fileHandle = await root.getFileHandle('bench-file', { create: true });
+            const fileName = `bench-file-${sizeName}`;
+            const fileHandle = await root.getFileHandle(fileName, { create: true });
 
-            const insertStart = performance.now();
-            const writable = await fileHandle.createWritable();
-            await writable.write(payloadStr);
-            await writable.close();
-            const insertTime = performance.now() - insertStart;
-
-            const readStart = performance.now();
-            const file = await fileHandle.getFile();
-            await file.text();
-            const readTime = performance.now() - readStart;
-
-            const updateStart = performance.now();
-            const writableUpd = await fileHandle.createWritable();
-            await writableUpd.write(payloadStr + 'mod');
-            await writableUpd.close();
-            const updateTime = performance.now() - updateStart;
-
-            const deleteStart = performance.now();
-            await root.removeEntry('bench-file').catch(() => { });
-            const deleteTime = performance.now() - deleteStart;
-
-            results['OPFS'] = { insert: insertTime, read: readTime, update: updateTime, delete: deleteTime };
+            results['OPFS'] = {
+                insert: await measureOperation(sizeValue, async () => {
+                    const s = performance.now();
+                    const writable = await fileHandle.createWritable();
+                    await writable.write(str);
+                    await writable.close();
+                    return performance.now() - s;
+                }),
+                read: await measureOperation(sizeValue, async () => {
+                    const s = performance.now();
+                    const file = await fileHandle.getFile();
+                    await file.text();
+                    return performance.now() - s;
+                }),
+                update: await measureOperation(sizeValue, async () => {
+                    const s = performance.now();
+                    const writableUpd = await fileHandle.createWritable();
+                    await writableUpd.write(modStr);
+                    await writableUpd.close();
+                    return performance.now() - s;
+                }),
+                delete: await measureOperation(sizeValue, async () => {
+                    const s = performance.now();
+                    await root.removeEntry(fileName).catch(() => { });
+                    return performance.now() - s;
+                })
+            };
         } catch (err) {
             results['OPFS'] = { insert: -1, read: -1, update: -1, delete: -1 };
         }

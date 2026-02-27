@@ -1,5 +1,6 @@
 import './style.css';
 import { createChart, COLORS } from './lib/charts';
+import { generatePayloadString, yieldToMain, measureOperation } from './lib/benchmark';
 
 // Constants
 const SIZES = {
@@ -13,13 +14,17 @@ const SIZES = {
   '1gb': 1024 * 1024 * 1024
 };
 
+// Interfaces
+interface TaskDef { category: string; sizeName: string; sizeValue: number; }
+interface BenchmarkResult { insert: number; read: number; update: number; delete: number; }
+
 // Global State
 let isRunning = false;
-const testQueue: { category: string, sizeName: string }[] = [];
+const testQueue: TaskDef[] = [];
 let totalTasks = 0;
 let completedTasks = 0;
 
-let latestData: any = {
+let latestData: Record<string, Record<string, any>> = {
   native: {},
   wrapper: {},
   compression: {}
@@ -84,14 +89,6 @@ function switchToTab(tabId: string) {
   });
 }
 
-function generatePayload(size: number) {
-  const pattern = 'WebBenchmarkPayload_';
-  const repeatCount = Math.floor(size / pattern.length);
-  const str = pattern.repeat(repeatCount) + 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.substring(0, size % pattern.length);
-  const encoder = new TextEncoder();
-  const buf = encoder.encode(str);
-  return { str, buf };
-}
 
 function getOrCreateChartContainer(category: string, sizeName: string) {
   const containerId = `chart-${category}-${sizeName}`;
@@ -153,52 +150,64 @@ function updateProgress(percent: number, msg: string) {
   progressText.innerText = msg;
 }
 
-async function runMainThreadNative(_sizeName: string, payloadStr: string) {
-  const results: any = {};
+async function runMainThreadNative(sizeName: string, sizeValue: number) {
+  const results: Record<string, BenchmarkResult> = {};
+  await yieldToMain(); // Yield to allow UI updates
+
+  const str = generatePayloadString(sizeValue);
+  const modStr = str + 'm';
+  const k = `bench_k_${sizeName}`;
 
   // Cookie
   try {
-    const sI = performance.now(); document.cookie = `bench=${payloadStr};path=/;max-age=60`; const i = performance.now() - sI;
-    const sR = performance.now(); document.cookie; const r = performance.now() - sR;
-    const sU = performance.now(); document.cookie = `bench=${payloadStr}mod;path=/;max-age=60`; const u = performance.now() - sU;
-    const sD = performance.now(); document.cookie = `bench=;path=/;max-age=0`; const d = performance.now() - sD;
-    results['Cookie'] = { insert: i, read: r, update: u, delete: d };
+    results['Cookie'] = {
+      insert: await measureOperation(sizeValue, () => { const s = performance.now(); document.cookie = `${k}=${str};path=/;max-age=60`; return performance.now() - s; }),
+      read: await measureOperation(sizeValue, () => { const s = performance.now(); void document.cookie; return performance.now() - s; }),
+      update: await measureOperation(sizeValue, () => { const s = performance.now(); document.cookie = `${k}=${modStr};path=/;max-age=60`; return performance.now() - s; }),
+      delete: await measureOperation(sizeValue, () => { const s = performance.now(); document.cookie = `${k}=;path=/;max-age=0`; return performance.now() - s; })
+    };
   } catch (e) { results['Cookie'] = { insert: -1, read: -1, update: -1, delete: -1 }; }
 
   // SessionStorage
   try {
-    sessionStorage.clear();
-    const sI = performance.now(); sessionStorage.setItem('k', payloadStr); const i = performance.now() - sI;
-    const sR = performance.now(); sessionStorage.getItem('k'); const r = performance.now() - sR;
-    const sU = performance.now(); sessionStorage.setItem('k', payloadStr + 'm'); const u = performance.now() - sU;
-    const sD = performance.now(); sessionStorage.removeItem('k'); const d = performance.now() - sD;
-    results['SessionStorage'] = { insert: i, read: r, update: u, delete: d };
+    results['SessionStorage'] = {
+      insert: await measureOperation(sizeValue, () => { const s = performance.now(); sessionStorage.setItem(k, str); return performance.now() - s; }),
+      read: await measureOperation(sizeValue, () => { const s = performance.now(); sessionStorage.getItem(k); return performance.now() - s; }),
+      update: await measureOperation(sizeValue, () => { const s = performance.now(); sessionStorage.setItem(k, modStr); return performance.now() - s; }),
+      delete: await measureOperation(sizeValue, () => { const s = performance.now(); sessionStorage.removeItem(k); return performance.now() - s; })
+    };
   } catch (e) { results['SessionStorage'] = { insert: -1, read: -1, update: -1, delete: -1 }; }
 
   // LocalStorage
   try {
-    localStorage.clear();
-    const sI = performance.now(); localStorage.setItem('k', payloadStr); const i = performance.now() - sI;
-    const sR = performance.now(); localStorage.getItem('k'); const r = performance.now() - sR;
-    const sU = performance.now(); localStorage.setItem('k', payloadStr + 'm'); const u = performance.now() - sU;
-    const sD = performance.now(); localStorage.removeItem('k'); const d = performance.now() - sD;
-    results['LocalStorage'] = { insert: i, read: r, update: u, delete: d };
+    results['LocalStorage'] = {
+      insert: await measureOperation(sizeValue, () => { const s = performance.now(); localStorage.setItem(k, str); return performance.now() - s; }),
+      read: await measureOperation(sizeValue, () => { const s = performance.now(); localStorage.getItem(k); return performance.now() - s; }),
+      update: await measureOperation(sizeValue, () => { const s = performance.now(); localStorage.setItem(k, modStr); return performance.now() - s; }),
+      delete: await measureOperation(sizeValue, () => { const s = performance.now(); localStorage.removeItem(k); return performance.now() - s; })
+    };
   } catch (e) { results['LocalStorage'] = { insert: -1, read: -1, update: -1, delete: -1 }; }
 
   return results;
 }
 
-async function runMainThreadWrapper(_sizeName: string, payloadStr: string) {
-  const results: any = {};
-  // store.js (usually uses localStorage)
+async function runMainThreadWrapper(sizeName: string, sizeValue: number) {
+  const results: Record<string, BenchmarkResult> = {};
+  await yieldToMain();
+
+  const str = generatePayloadString(sizeValue);
+  const modStr = str + 'm';
+  const k = `bench_st_${sizeName}`;
+
+  // store.js (usually uses localStorage fallback)
   try {
     if (typeof localStorage !== 'undefined') {
-      localStorage.clear();
-      const sI = performance.now(); localStorage.setItem('st', payloadStr); const i = performance.now() - sI;
-      const sR = performance.now(); localStorage.getItem('st'); const r = performance.now() - sR;
-      const sU = performance.now(); localStorage.setItem('st', payloadStr + 'm'); const u = performance.now() - sU;
-      const sD = performance.now(); localStorage.removeItem('st'); const d = performance.now() - sD;
-      results['store.js'] = { insert: i, read: r, update: u, delete: d };
+      results['store.js'] = {
+        insert: await measureOperation(sizeValue, () => { const s = performance.now(); localStorage.setItem(k, str); return performance.now() - s; }),
+        read: await measureOperation(sizeValue, () => { const s = performance.now(); localStorage.getItem(k); return performance.now() - s; }),
+        update: await measureOperation(sizeValue, () => { const s = performance.now(); localStorage.setItem(k, modStr); return performance.now() - s; }),
+        delete: await measureOperation(sizeValue, () => { const s = performance.now(); localStorage.removeItem(k); return performance.now() - s; })
+      };
     } else {
       results['store.js'] = { insert: -1, read: -1, update: -1, delete: -1 };
     }
@@ -221,22 +230,21 @@ async function runNext() {
   addLog(`Executing: ${task.category.toUpperCase()} at ${task.sizeName.toUpperCase()}`);
 
   const sizeValue = SIZES[task.sizeName as keyof typeof SIZES];
-  const { str, buf } = generatePayload(sizeValue);
 
   if (task.category === 'native') {
-    const mainResults = await runMainThreadNative(task.sizeName, str);
+    const mainResults = await runMainThreadNative(task.sizeName, sizeValue);
     latestData.native[task.sizeName] = { ...mainResults };
-    nativeWorker.postMessage({ type: 'start_native', sizeName: task.sizeName, payloadStr: str, payloadBuf: buf });
+    nativeWorker.postMessage({ type: 'start_native', sizeName: task.sizeName, sizeValue });
   } else if (task.category === 'wrapper') {
-    const mainResults = await runMainThreadWrapper(task.sizeName, str);
+    const mainResults = await runMainThreadWrapper(task.sizeName, sizeValue);
     latestData.wrapper[task.sizeName] = { ...mainResults };
-    wrapperWorker.postMessage({ type: 'start_wrapper', sizeName: task.sizeName, payloadStr: str });
+    wrapperWorker.postMessage({ type: 'start_wrapper', sizeName: task.sizeName, sizeValue });
   } else if (task.category === 'compression') {
-    compressionWorker.postMessage({ type: 'start_compression', sizeName: task.sizeName, payloadStr: str, payloadBuf: buf });
+    compressionWorker.postMessage({ type: 'start_compression', sizeName: task.sizeName, sizeValue });
   }
 }
 
-async function startBenchmark(tasks: { category: string, sizeName: string }[]) {
+async function startBenchmark(tasks: TaskDef[]) {
   if (isRunning) return;
   isRunning = true;
   testQueue.length = 0;
@@ -301,10 +309,9 @@ btnSizeNone.addEventListener('click', () => sizeChecks.forEach(c => c.checked = 
 
 btnRunAll.addEventListener('click', () => {
   const standardSizes = ['128b', '1kb', '10kb', '100kb', '1mb', '10mb'];
-  const categories = ['native', 'wrapper', 'compression'];
-  const tasks: any[] = [];
-  standardSizes.forEach(s => categories.forEach(c => tasks.push({ category: c, sizeName: s })));
-  startBenchmark(tasks);
+  categoryChecks.forEach(c => c.checked = true);
+  sizeChecks.forEach(c => c.checked = standardSizes.includes(c.value));
+  btnRunCustom.click();
 });
 
 btnRunCustom.addEventListener('click', () => {
@@ -323,8 +330,8 @@ btnRunCustom.addEventListener('click', () => {
     }
   }
 
-  const tasks: any[] = [];
-  selectedSizes.forEach(s => selectedCats.forEach(c => tasks.push({ category: c, sizeName: s })));
+  const tasks: TaskDef[] = [];
+  selectedSizes.forEach(s => selectedCats.forEach(c => tasks.push({ category: c, sizeName: s, sizeValue: SIZES[s as keyof typeof SIZES] })));
   startBenchmark(tasks);
 });
 

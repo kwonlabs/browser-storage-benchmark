@@ -3,47 +3,65 @@ import localforage from 'localforage';
 import Dexie from 'dexie';
 // @ts-ignore
 import PouchDB from 'pouchdb-browser';
+import { generatePayloadString, measureOperation } from '../lib/benchmark';
 
 self.onmessage = async (e) => {
-    const { type, sizeName, payloadStr } = e.data;
+    const { type, sizeName, sizeValue } = e.data;
 
     if (type === 'start_wrapper') {
         const results: Record<string, any> = {};
+        const str = generatePayloadString(sizeValue);
+        const modStr = str + 'm';
+        const k = `bench_k_${sizeName}`;
 
         // localForage
         try {
             localforage.config({ name: 'bench-lf' });
-            await localforage.clear();
-            const iStart = performance.now(); await localforage.setItem('k', payloadStr); const i = performance.now() - iStart;
-            const rStart = performance.now(); await localforage.getItem('k'); const r = performance.now() - rStart;
-            const uStart = performance.now(); await localforage.setItem('k', payloadStr + 'm'); const u = performance.now() - uStart;
-            const dStart = performance.now(); await localforage.removeItem('k'); const d = performance.now() - dStart;
-            results['localForage'] = { insert: i, read: r, update: u, delete: d };
+            results['localForage'] = {
+                insert: await measureOperation(sizeValue, async () => { const s = performance.now(); await localforage.setItem(k, str); return performance.now() - s; }),
+                read: await measureOperation(sizeValue, async () => { const s = performance.now(); await localforage.getItem(k); return performance.now() - s; }),
+                update: await measureOperation(sizeValue, async () => { const s = performance.now(); await localforage.setItem(k, modStr); return performance.now() - s; }),
+                delete: await measureOperation(sizeValue, async () => { const s = performance.now(); await localforage.removeItem(k); return performance.now() - s; })
+            };
         } catch (err) { results['localForage'] = { insert: -1, read: -1, update: -1, delete: -1 }; }
 
         // Dexie
         try {
             const db = new Dexie('bench-dexie');
             db.version(1).stores({ data: 'id' });
-            await db.table('data').clear();
-            const iStart = performance.now(); await db.table('data').add({ id: 'k', val: payloadStr }); const i = performance.now() - iStart;
-            const rStart = performance.now(); await db.table('data').get('k'); const r = performance.now() - rStart;
-            const uStart = performance.now(); await db.table('data').put({ id: 'k', val: payloadStr + 'm' }); const u = performance.now() - uStart;
-            const dStart = performance.now(); await db.table('data').delete('k'); const d = performance.now() - dStart;
-            results['Dexie'] = { insert: i, read: r, update: u, delete: d };
+            results['Dexie'] = {
+                insert: await measureOperation(sizeValue, async () => { const s = performance.now(); await db.table('data').put({ id: k, val: str }); return performance.now() - s; }),
+                read: await measureOperation(sizeValue, async () => { const s = performance.now(); await db.table('data').get(k); return performance.now() - s; }),
+                update: await measureOperation(sizeValue, async () => { const s = performance.now(); await db.table('data').put({ id: k, val: modStr }); return performance.now() - s; }),
+                delete: await measureOperation(sizeValue, async () => { const s = performance.now(); await db.table('data').delete(k); return performance.now() - s; })
+            };
             db.close();
         } catch (err) { results['Dexie'] = { insert: -1, read: -1, update: -1, delete: -1 }; }
 
         // PouchDB
         try {
-            const db = new PouchDB('bench-pouch');
-            await db.destroy().catch(() => { });
             const pdb = new PouchDB('bench-pouch');
-            const iStart = performance.now(); await pdb.put({ _id: 'k', val: payloadStr }); const i = performance.now() - iStart;
-            const rStart = performance.now(); const doc: any = await pdb.get('k'); const r = performance.now() - rStart;
-            const uStart = performance.now(); await pdb.put({ ...doc, val: payloadStr + 'm' }); const u = performance.now() - uStart;
-            const dStart = performance.now(); const doc2: any = await pdb.get('k'); await pdb.remove(doc2); const d = performance.now() - dStart;
-            results['PouchDB'] = { insert: i, read: r, update: u, delete: d };
+            results['PouchDB'] = {
+                insert: await measureOperation(sizeValue, async () => {
+                    const s = performance.now();
+                    try { const existing = await pdb.get(k); await pdb.put({ _id: k, _rev: existing._rev, val: str }); }
+                    catch (err) { await pdb.put({ _id: k, val: str }); }
+                    return performance.now() - s;
+                }),
+                read: await measureOperation(sizeValue, async () => { const s = performance.now(); await pdb.get(k); return performance.now() - s; }),
+                update: await measureOperation(sizeValue, async () => {
+                    const s = performance.now();
+                    const doc: any = await pdb.get(k);
+                    await pdb.put({ ...doc, val: modStr });
+                    return performance.now() - s;
+                }),
+                delete: await measureOperation(sizeValue, async () => {
+                    const s = performance.now();
+                    const doc2: any = await pdb.get(k);
+                    await pdb.remove(doc2);
+                    return performance.now() - s;
+                })
+            };
         } catch (err) { results['PouchDB'] = { insert: -1, read: -1, update: -1, delete: -1 }; }
 
         // SQLite (WASM + OPFS)
@@ -56,38 +74,29 @@ self.onmessage = async (e) => {
                 const db = new sqlite3.oo1.OpfsDb('/bench.sqlite3', 'c');
                 try {
                     db.exec("CREATE TABLE IF NOT EXISTS data (id TEXT PRIMARY KEY, val TEXT)");
-                    db.exec("DELETE FROM data");
 
-                    const iStart = performance.now();
-                    db.exec({
-                        sql: "INSERT INTO data (id, val) VALUES (?, ?)",
-                        bind: ['k', payloadStr]
-                    });
-                    const i = performance.now() - iStart;
-
-                    const rStart = performance.now();
-                    db.exec({
-                        sql: "SELECT val FROM data WHERE id = ?",
-                        bind: ['k'],
-                        returnValue: "resultRows"
-                    });
-                    const r = performance.now() - rStart;
-
-                    const uStart = performance.now();
-                    db.exec({
-                        sql: "UPDATE data SET val = ? WHERE id = ?",
-                        bind: [payloadStr + 'm', 'k']
-                    });
-                    const u = performance.now() - uStart;
-
-                    const dStart = performance.now();
-                    db.exec({
-                        sql: "DELETE FROM data WHERE id = ?",
-                        bind: ['k']
-                    });
-                    const d = performance.now() - dStart;
-
-                    results['SQLite'] = { insert: i, read: r, update: u, delete: d };
+                    results['SQLite'] = {
+                        insert: await measureOperation(sizeValue, () => {
+                            const s = performance.now();
+                            db.exec({ sql: "INSERT OR REPLACE INTO data (id, val) VALUES (?, ?)", bind: [k, str] });
+                            return performance.now() - s;
+                        }),
+                        read: await measureOperation(sizeValue, () => {
+                            const s = performance.now();
+                            db.exec({ sql: "SELECT val FROM data WHERE id = ?", bind: [k], returnValue: "resultRows" });
+                            return performance.now() - s;
+                        }),
+                        update: await measureOperation(sizeValue, () => {
+                            const s = performance.now();
+                            db.exec({ sql: "UPDATE data SET val = ? WHERE id = ?", bind: [modStr, k] });
+                            return performance.now() - s;
+                        }),
+                        delete: await measureOperation(sizeValue, () => {
+                            const s = performance.now();
+                            db.exec({ sql: "DELETE FROM data WHERE id = ?", bind: [k] });
+                            return performance.now() - s;
+                        })
+                    };
                 } finally {
                     db.close();
                 }
