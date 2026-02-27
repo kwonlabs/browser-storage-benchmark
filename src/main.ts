@@ -48,7 +48,10 @@ const btnImport = document.getElementById('btn-import-json') as HTMLButtonElemen
 const inputImport = document.getElementById('input-import-json') as HTMLInputElement;
 
 const logo = document.querySelector('.logo') as HTMLDivElement;
-logo.addEventListener('click', () => switchToTab('tab-home'));
+logo.addEventListener('click', () => {
+  window.history.pushState({}, '', '/');
+  switchToTab('home');
+});
 
 const consoleLogs = document.getElementById('console-logs') as HTMLDivElement;
 
@@ -319,27 +322,28 @@ compressionWorker.onmessage = (e) => {
 
 // Event Listeners
 document.querySelectorAll('.tab-btn').forEach(btn => {
-  btn.addEventListener('click', () => {
-    const target = (btn as HTMLElement).dataset.target!;
+  const target = (btn as HTMLElement).dataset.target!;
+  const pVal = target.replace('tab-', '');
 
-    // Update UI
-    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-    btn.classList.add('active');
-    document.getElementById(target)?.classList.add('active');
+  // Update UI
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById(target)?.classList.add('active');
 
-    // Update URL without reload
-    const url = new URL(window.location.href);
-    url.searchParams.set('tab', target);
-    window.history.pushState({}, '', url.toString());
-  });
+  // Update URL (p=home / p=report)
+  const url = new URL(window.location.href);
+  url.searchParams.set('p', pVal);
+  url.searchParams.delete('tab'); // Clean up old system
+  window.history.pushState({}, '', url.toString());
+});
 });
 
 // Sync UI on browser back/forward
 window.addEventListener('popstate', () => {
   const urlParams = new URLSearchParams(window.location.search);
-  const tab = urlParams.get('tab') || 'tab-home';
-  switchToTab(tab);
+  const p = urlParams.get('p') || 'home';
+  switchToTab(p);
 });
 
 btnToggleAdvanced.addEventListener('click', (e) => {
