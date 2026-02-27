@@ -16,8 +16,8 @@
       </div>
       <div class="header-right">
         <nav class="tabs">
-          <button class="tab-btn active" data-target="tab-home">Home & Guide</button>
-          <button class="tab-btn" data-target="tab-report">Performance Report</button>
+          <button class="tab-btn active" data-target="tab-home">Home</button>
+          <button class="tab-btn" data-target="tab-report">Report</button>
         </nav>
       </div>
     </div>
@@ -28,79 +28,13 @@
     <section id="tab-home" class="tab-content active">
       <div class="hero-section">
         <h2>Web Storage Performance Benchmark</h2>
-        <p>Analyze latency and compression efficiency of modern web technologies.</p>
+        <p>Analyze latency and compression efficiency of modern web storage technologies.</p>
 
         <div class="hero-actions">
-          <button id="btn-run-all" class="btn-primary-large">Run Benchmarks (128B - 10MB)</button>
-          <div class="advanced-toggle">
-            <a href="#" id="btn-toggle-advanced" class="link-advanced">Advanced Settings</a>
-          </div>
+          <button id="btn-run-all" class="btn-primary-large">▶ Run Default Benchmark (128B - 10MB)</button>
         </div>
 
-        <div id="advanced-controller" class="advanced-panel" style="display: none;">
-          <div class="matrix-controller">
-            <h3>Benchmark Matrix Controller</h3>
-            <p class="matrix-subtitle">Configure custom test scenarios. (100MB+ may take significant time)</p>
 
-            <div class="matrix-grid">
-              <div class="matrix-row">
-                <div class="row-label">
-                  <span>1. Targets</span>
-                  <div class="row-actions">
-                    <button class="btn-text-mini" id="cat-all">All</button>
-                    <button class="btn-text-mini" id="cat-none">None</button>
-                  </div>
-                </div>
-                <div class="row-content">
-                  <div class="checkbox-list">
-                    <label><input type="checkbox" class="category-check" value="native" checked> Native</label>
-                    <label><input type="checkbox" class="category-check" value="wrapper" checked> Wrapper</label>
-                    <label><input type="checkbox" class="category-check" value="compression" checked>
-                      Compression</label>
-                  </div>
-                </div>
-              </div>
-
-              <div class="matrix-row">
-                <div class="row-label">
-                  <span>2. Sizes</span>
-                  <div class="row-actions">
-                    <button class="btn-text-mini" id="size-all">All</button>
-                    <button class="btn-text-mini" id="size-none">None</button>
-                  </div>
-                </div>
-                <div class="row-content">
-                  <div class="checkbox-list">
-                    <label><input type="checkbox" class="size-check" value="128b" checked> 128B</label>
-                    <label><input type="checkbox" class="size-check" value="1kb" checked> 1KB</label>
-                    <label><input type="checkbox" class="size-check" value="10kb" checked> 10KB</label>
-                    <label><input type="checkbox" class="size-check" value="100kb" checked> 100KB</label>
-                    <label><input type="checkbox" class="size-check" value="1mb" checked> 1MB</label>
-                    <label><input type="checkbox" class="size-check" value="10mb" checked> 10MB</label>
-                    <label class="warning-label" title="May freeze browser"><input type="checkbox" class="size-check"
-                        value="100mb"> 100MB*</label>
-                    <label class="warning-label" title="High memory usage"><input type="checkbox" class="size-check"
-                        value="1gb"> 1GB*</label>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div class="matrix-execute">
-              <button id="btn-run-custom" class="btn-secondary-full">Execute Selected Configuration</button>
-            </div>
-          </div>
-        </div>
-
-        <div id="overall-progress" class="overall-progress" style="display: none;">
-          <div class="progress-info">
-            <span id="progress-text">Initializing...</span>
-            <span id="progress-percent">0%</span>
-          </div>
-          <div class="progress-bar-bg">
-            <div id="progress-bar-fill" class="progress-bar-fill"></div>
-          </div>
-        </div>
       </div>
 
       <div class="tech-guide">
@@ -264,12 +198,163 @@
           <div class="header-main">
             <h2>Detailed Performance Report</h2>
             <div class="report-actions">
-              <button id="btn-export-json" class="btn-outline">Export JSON</button>
-              <button id="btn-import-json" class="btn-outline">Import JSON</button>
-              <input type="file" id="input-import-json" style="display: none;" accept=".json">
+              <button id="btn-report-run" class="btn-primary-large-s">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"
+                  stroke-linecap="round" stroke-linejoin="round">
+                  <polygon points="5 3 19 12 5 21 5 3" />
+                </svg>
+                Run
+              </button>
+              <button id="btn-toggle-advanced" class="btn-outline">
+                Advanced <span class="toggle-arrow">▼</span>
+              </button>
+              <button id="btn-show-history" class="btn-outline">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                  stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="12" cy="12" r="10" />
+                  <polyline points="12 6 12 12 16 14" />
+                </svg>
+                History
+              </button>
             </div>
           </div>
-          <p>Real-time updates and historical performance metrics.</p>
+          <p>Analyze performance scalability across various data sizes.</p>
+
+          <div id="advanced-controller" class="advanced-panel-compact" style="display: none;">
+            <div class="matrix-controller">
+              <div class="matrix-grid">
+                <div class="matrix-row">
+                  <div class="row-label"><span>Targets</span></div>
+                  <div class="row-content">
+                    <div class="checkbox-list">
+                      <label><input type="checkbox" class="category-check" value="native" checked> Native</label>
+                      <label><input type="checkbox" class="category-check" value="wrapper" checked> Wrapper</label>
+                      <label><input type="checkbox" class="category-check" value="compression" checked>
+                        Compression</label>
+                    </div>
+                  </div>
+                  <div class="row-ops-inline">
+                    <button class="btn-text-mini" id="cat-all">All</button>
+                    <button class="btn-text-mini" id="cat-none">None</button>
+                  </div>
+                </div>
+                <div class="matrix-row">
+                  <div class="row-label"><span>Sizes</span></div>
+                  <div class="row-content">
+                    <div class="checkbox-list">
+                      <label><input type="checkbox" class="size-check" value="128b" checked> 128B</label>
+                      <label><input type="checkbox" class="size-check" value="1kb" checked> 1K</label>
+                      <label><input type="checkbox" class="size-check" value="10kb" checked> 10K</label>
+                      <label><input type="checkbox" class="size-check" value="100kb" checked> 100K</label>
+                      <label><input type="checkbox" class="size-check" value="1mb" checked> 1M</label>
+                      <label><input type="checkbox" class="size-check" value="10mb" checked> 10M</label>
+                      <label class="warning-label"><input type="checkbox" class="size-check" value="100mb">
+                        100M*</label>
+                      <label class="warning-label"><input type="checkbox" class="size-check" value="1gb"> 1G*</label>
+                    </div>
+                  </div>
+                  <div class="row-ops-inline">
+                    <button class="btn-text-mini" id="size-default">Default</button>
+                    <button class="btn-text-mini" id="size-all">All</button>
+                    <button class="btn-text-mini" id="size-none">None</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div id="advanced-controller" class="advanced-panel-compact" style="display: none;">
+            <div class="matrix-controller">
+              <div class="matrix-grid">
+                <div class="matrix-row">
+                  <div class="row-label"><span>Targets</span></div>
+                  <div class="row-content">
+                    <div class="checkbox-list">
+                      <label><input type="checkbox" class="category-check" value="native" checked> Native</label>
+                      <label><input type="checkbox" class="category-check" value="wrapper" checked> Wrapper</label>
+                      <label><input type="checkbox" class="category-check" value="compression" checked>
+                        Compression</label>
+                    </div>
+                  </div>
+                </div>
+                <div class="matrix-row">
+                  <div class="row-label"><span>Sizes</span></div>
+                  <div class="row-content">
+                    <div class="checkbox-list">
+                      <label><input type="checkbox" class="size-check" value="128b" checked> 128B</label>
+                      <label><input type="checkbox" class="size-check" value="1kb" checked> 1K</label>
+                      <label><input type="checkbox" class="size-check" value="10kb" checked> 10K</label>
+                      <label><input type="checkbox" class="size-check" value="100kb" checked> 100K</label>
+                      <label><input type="checkbox" class="size-check" value="1mb" checked> 1M</label>
+                      <label><input type="checkbox" class="size-check" value="10mb" checked> 10M</label>
+                      <label class="warning-label"><input type="checkbox" class="size-check" value="100mb">
+                        100M*</label>
+                      <label class="warning-label"><input type="checkbox" class="size-check" value="1gb"> 1G*</label>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="matrix-execute">
+                <button id="btn-run-custom" class="btn-secondary-run">Execute Custom Config</button>
+                <div class="matrix-row-options">
+                  <button class="btn-text-mini" id="cat-all">Cat All</button>
+                  <button class="btn-text-mini" id="cat-none">Cat None</button>
+                  <span class="sep">|</span>
+                  <button class="btn-text-mini" id="size-all">Size All</button>
+                  <button class="btn-text-mini" id="size-none">Size None</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div id="overall-progress" class="overall-progress" style="display: none;">
+            <div class="progress-info">
+              <span id="progress-text">Initializing...</span>
+              <span id="progress-percent">0%</span>
+            </div>
+            <div class="progress-bar-bg">
+              <div id="progress-bar-fill" class="progress-bar-fill"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- History Overlay/Sidebar -->
+        <div id="history-panel" class="history-panel" style="display: none;">
+          <div class="history-header">
+            <h3>Benchmarks</h3>
+            <div class="history-actions-top">
+              <button id="btn-export-json" class="btn-icon-s" title="Export JSON">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                  stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                  <polyline points="17 8 12 3 7 8" />
+                  <line x1="12" y1="3" x2="12" y2="15" />
+                </svg>
+              </button>
+              <button id="btn-import-json" class="btn-icon-s" title="Import JSON">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                  stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                  <polyline points="7 10 12 15 17 10" />
+                  <line x1="12" y1="15" x2="12" y2="3" />
+                </svg>
+              </button>
+              <input type="file" id="input-import-json" style="display: none;" accept=".json">
+              <button id="btn-close-history" class="btn-icon-s btn-close-s" title="Close">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                  stroke-linecap="round" stroke-linejoin="round">
+                  <line x1="18" y1="6" x2="6" y2="18" />
+                  <line x1="6" y1="6" x2="18" y2="18" />
+                </svg>
+              </button>
+            </div>
+          </div>
+          <div class="history-list" id="history-list">
+            <!-- Sessions will be injected here -->
+          </div>
+          <div class="history-footer">
+            <button id="btn-clear-history" class="btn-danger-text">Clear All History</button>
+          </div>
         </div>
 
         <div class="report-console" id="report-console">
@@ -281,23 +366,36 @@
 
         <div class="report-grid">
           <div class="report-section">
-            <h3 class="section-title">🌐 Native Web Storage</h3>
-            <div id="report-list-native" class="scroll-list">
-              <div class="empty-state">Run benchmarks to populate this section.</div>
+            <h3 class="section-title">🌐 Native Storage Performance Trends</h3>
+            <div class="trend-layout">
+              <div class="report-chart-item">
+                <canvas id="chart-trend-native-write"></canvas>
+              </div>
+              <div class="report-chart-item">
+                <canvas id="chart-trend-native-read"></canvas>
+              </div>
             </div>
           </div>
-
           <div class="report-section">
-            <h3 class="section-title">📚 Wrapper Libraries</h3>
-            <div id="report-list-wrapper" class="scroll-list">
-              <div class="empty-state">No library data available yet.</div>
+            <h3 class="section-title">📚 Library Performance Trends</h3>
+            <div class="trend-layout">
+              <div class="report-chart-item">
+                <canvas id="chart-trend-wrapper-write"></canvas>
+              </div>
+              <div class="report-chart-item">
+                <canvas id="chart-trend-wrapper-read"></canvas>
+              </div>
             </div>
           </div>
-
           <div class="report-section">
-            <h3 class="section-title">📦 Compression Engines</h3>
-            <div id="report-list-compression" class="scroll-list">
-              <div class="empty-state">No compression metrics available yet.</div>
+            <h3 class="section-title">🗜️ Compression Efficiency Trends</h3>
+            <div class="trend-layout">
+              <div class="report-chart-item">
+                <canvas id="chart-trend-compression-speed"></canvas>
+              </div>
+              <div class="report-chart-item">
+                <canvas id="chart-trend-compression-ratio"></canvas>
+              </div>
             </div>
           </div>
         </div>
