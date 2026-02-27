@@ -98,6 +98,7 @@ function switchToTab(targetId: string) {
   const targetContent = document.getElementById(targetId);
   if (targetContent) {
     targetContent.classList.add('active');
+    document.body.classList.toggle('is-404', targetId === 'tab-404');
   } else {
     console.error('Target tab content not found:', targetId);
     return;

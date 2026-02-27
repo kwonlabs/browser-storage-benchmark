@@ -1002,6 +1002,14 @@ main {
   max-width: 500px;
   width: 90%;
   box-shadow: 0 40px 80px -12px rgba(0, 0, 0, 0.5);
+  display: flex;
+  flex-direction: column;
+  alignment: center;
+  align-items: center;
+}
+
+body.is-404 header {
+  display: none;
 }
 
 .error-card h1 {
