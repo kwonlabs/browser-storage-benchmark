@@ -324,6 +324,7 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
     btn.classList.add('active');
     const target = (btn as HTMLElement).dataset.target!;
     document.getElementById(target)?.classList.add('active');
+    localStorage.setItem('active_tab', target);
   });
 });
 
@@ -475,6 +476,12 @@ async function loadLatest() {
 // Initial Load
 loadLatest();
 refreshHistory();
+
+// Restore Tab
+const savedTab = localStorage.getItem('active_tab');
+if (savedTab) {
+  switchToTab(savedTab);
+}
 
 // Event Listeners
 btnShowHistory.addEventListener('click', () => {
