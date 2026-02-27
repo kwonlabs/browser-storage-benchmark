@@ -85,7 +85,7 @@ function addLog(msg: string, type: 'system' | 'success' | 'error' = 'system') {
   const entry = document.createElement('div');
   entry.className = `log-entry ${type}`;
   const now = new Date();
-  const ts = now.toLocaleTimeString([], { hour12: false });
+  const ts = now.toLocaleTimeString('en-GB', { hour12: false });
   entry.innerText = `[${ts}] ${msg}`;
   consoleLogs.appendChild(entry);
   consoleLogs.scrollTop = consoleLogs.scrollHeight;
@@ -303,7 +303,7 @@ async function runNext() {
 
   const task = testQueue.shift()!;
   completedTasks++;
-  const percent = Math.round(((completedTasks - 1) / totalTasks) * 100);
+  const percent = Math.round((completedTasks / totalTasks) * 100);
   updateProgress(percent, `Running ${task.category.toUpperCase()} - ${task.sizeName.toUpperCase()}...`);
   addLog(`Executing: ${task.category.toUpperCase()} at ${task.sizeName.toUpperCase()}`);
 
