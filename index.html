@@ -1,0 +1,201 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Comprehensive Storage Benchmark</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      padding: 2rem;
+      max-width: 900px;
+      margin: 0 auto;
+      background-color: #f9fafb;
+      color: #111827;
+    }
+
+    h1 {
+      font-size: 1.5rem;
+      margin-bottom: 1rem;
+    }
+
+    .card {
+      background-color: #fff;
+      border-radius: 8px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+
+    button {
+      background-color: #2563eb;
+      color: white;
+      border: none;
+      padding: 0.5rem 1rem;
+      border-radius: 4px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background-color 0.2s;
+      font-size: 1rem;
+    }
+
+    button:hover {
+      background-color: #1d4ed8;
+    }
+
+    button:disabled {
+      background-color: #93c5fd;
+      cursor: not-allowed;
+    }
+
+    /* Customizing <details> arrow */
+    details {
+      background-color: #1f2937;
+      border-radius: 6px;
+      padding: 0;
+      margin-top: 1rem;
+      overflow: hidden;
+    }
+
+    summary {
+      font-weight: 500;
+      cursor: pointer;
+      user-select: none;
+      padding: 0.8rem 1rem;
+      background-color: #374151;
+      color: #e5e7eb;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      list-style: none;
+      /* Hide default arrow in standard browsers */
+    }
+
+    /* Fallback to hide default arrow in webkit */
+    summary::-webkit-details-marker {
+      display: none;
+    }
+
+    summary::before {
+      content: '▶';
+      /* Default arrow right */
+      display: inline-block;
+      margin-right: 0.5rem;
+      transition: transform 0.2s;
+      font-size: 0.8rem;
+    }
+
+    details[open] summary::before {
+      transform: rotate(90deg);
+      /* Arrow down when open */
+    }
+
+    #logs {
+      font-family: monospace;
+      font-size: 0.9rem;
+      background-color: transparent;
+      color: #e5e7eb;
+      padding: 1rem;
+      white-space: pre-wrap;
+      height: 250px;
+      overflow-y: auto;
+      border-top: 1px solid #4b5563;
+    }
+
+    .chart-container {
+      position: relative;
+      height: 400px;
+      width: 100%;
+      margin-bottom: 2rem;
+    }
+  </style>
+</head>
+
+<body>
+  <h1>Browser Storage Benchmark (Averaged)</h1>
+  <div class="card">
+    <p>This benchmark measures performance across pure Native Storage and Wrapper Storage targeting 3 distinct
+      operations:</p>
+    <ul>
+      <li><strong>Metadata / Text (1000 records)</strong>: LocalStorage (Main Thread) vs IndexedDB vs SQLite WASM</li>
+      <li><strong>Blob Storage (100x 512KB)</strong>: IndexedDB vs OPFS Native vs SQLite WASM</li>
+      <li><strong>Compression Ratio (100x 512KB)</strong>: Gzip, Deflate, ZIP, Brotli, Zstd applied to OPFS/IDB</li>
+    </ul>
+
+    <div style="display: flex; gap: 0.5rem; margin-top: 1rem; flex-wrap: wrap;">
+      <button id="btn-run-metadata" style="background-color: #f59e0b;">1. Run Metadata (Freezes UI)</button>
+      <button id="btn-run-blob" style="background-color: #3b82f6;">2. Run Blobs</button>
+      <button id="btn-run-compression" style="background-color: #8b5cf6;">3. Run Compression</button>
+    </div>
+
+    <hr style="margin: 2rem 0; border: 1px solid #374151;">
+
+    <h3>Isolated Payload Benchmarks</h3>
+    <p>Measures write/read speed for identical, standalone blobs across Native vs Wrapped storage APIs.</p>
+    <div style="display: flex; gap: 0.5rem; margin-top: 1rem; flex-wrap: wrap;">
+      <button id="btn-run-payload-1kb" style="background-color: #10b981;">Test 1KB (Low)</button>
+      <button id="btn-run-payload-1mb" style="background-color: #10b981;">Test 1MB (Medium)</button>
+      <button id="btn-run-payload-100mb" style="background-color: #10b981;">Test 100MB (High)</button>
+    </div>
+
+    <hr style="margin: 2rem 0; border: 1px solid #374151;">
+
+    <details open>
+      <summary>
+        <div>Worker Logs & State</div>
+        <button id="copy-logs-btn"
+          style="padding: 0.3rem 0.6rem; font-size: 0.8rem; background-color: #4b5563; border-radius: 4px;"
+          onclick="event.preventDefault();">Copy Logs</button>
+        <button id="export-json-btn"
+          style="padding: 0.3rem 0.6rem; font-size: 0.8rem; background-color: #2563eb; border-radius: 4px;"
+          onclick="event.preventDefault();">Export JSON</button>
+        <button id="import-json-btn"
+          style="padding: 0.3rem 0.6rem; font-size: 0.8rem; background-color: #059669; border-radius: 4px;"
+          onclick="event.preventDefault();">Import JSON</button>
+        <input type="file" id="import-json-input" accept=".json" style="display: none;" />
+      </summary>
+      <div id="logs">Waiting for commands...</div>
+    </details>
+  </div>
+
+  <div class="card">
+    <div class="chart-container">
+      <canvas id="metadata-chart"></canvas>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="chart-container">
+      <canvas id="blob-chart"></canvas>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="chart-container" style="height: 450px;">
+      <canvas id="compression-idb-chart"></canvas>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="chart-container" style="height: 450px;">
+      <canvas id="compression-opfs-chart"></canvas>
+    </div>
+  </div>
+
+  <h2>Payload Size Comparison</h2>
+  <div class="card">
+    <div class="chart-container">
+      <canvas id="native-size-chart"></canvas>
+    </div>
+  </div>
+  <div class="card">
+    <div class="chart-container">
+      <canvas id="wrapper-size-chart"></canvas>
+    </div>
+  </div>
+
+  <script type="module" src="/src/main.ts"></script>
+</body>
+
+</html>
