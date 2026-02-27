@@ -1057,3 +1057,24 @@ body.is-404 header {
   background: rgba(255, 255, 255, 0.1);
   border-radius: 10px;
 }
+
+footer {
+  border-top: 1px solid var(--border-color);
+  padding: 3rem 2rem;
+  margin-top: 6rem;
+  background: rgba(11, 15, 26, 0.4);
+  backdrop-filter: blur(12px);
+}
+
+.footer-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  text-align: center;
+}
+
+.footer-container p {
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+}
