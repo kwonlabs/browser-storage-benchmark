@@ -10,37 +10,32 @@
 <body>
   <header>
     <div class="title-section">
-      <h1>Browser Storage Benchmark</h1>
-      <p>Analyze performance across Natives, Wrappers, and Compression algorithms.</p>
-    </div>
-    <div class="controls">
-      <button id="btn-export" class="btn-success">Export JSON</button>
-      <button id="btn-import" class="btn-secondary">Import JSON</button>
-      <input type="file" id="input-import" accept=".json" style="display: none;" />
-    </div>
+      <div class="logo-area">
+        <h1>Browser Storage & Compression Analyzer</h1>
+      </div>
+      <nav class="tabs">
+        <button class="tab-btn active" data-target="tab-home">🏠 Home & Guide</button>
+        <button class="tab-btn" data-target="tab-report">📊 Performance Report</button>
+      </nav>
   </header>
-
-  <nav class="tabs">
-    <button class="tab-btn active" data-target="tab-home">🏠 Home & Guide</button>
-    <button class="tab-btn" data-target="tab-report">📊 Performance Report</button>
-  </nav>
 
   <main>
     <!-- TAB: HOME & GUIDE -->
     <section id="tab-home" class="tab-content active">
       <div class="hero-section">
-        <h2>Browser Storage & Compression Analyzer</h2>
-        <p>현대 웹 브라우저의 저장 및 압축 기술을 한눈에 비교하고 분석하세요.</p>
+        <h2>Compare and analyze modern web browser storage and compression technologies.</h2>
         <div class="hero-actions">
-          <button id="btn-run-all" class="btn-primary-large">🚀 Run Standard Benchmarks (128B - 10MB)</button>
-          <button id="btn-toggle-advanced" class="btn-secondary">⚙️ Advanced Settings</button>
+          <button id="btn-run-all" class="btn-primary-large">Run Benchmarks (128B - 10MB)</button>
+          <div class="advanced-toggle">
+            <a href="#" id="btn-toggle-advanced" class="link-advanced">Advanced</a>
+          </div>
         </div>
 
         <div id="advanced-controller" class="advanced-panel" style="display: none;">
           <div class="action-section">
             <h3>Benchmark Matrix Controller</h3>
-            <p style="margin-bottom: 1.5rem; font-size: 0.9rem; color: var(--text-muted);">커스텀 테스트 시나리오를 구성하세요. (100MB
-              이상은 시간이 소요됩니다)</p>
+            <p style="margin-bottom: 1.5rem; font-size: 0.9rem; color: var(--text-muted);">Configure custom test
+              scenarios. (100MB+ may take significant time)</p>
 
             <div class="runner-config">
               <div class="config-group">
@@ -97,24 +92,148 @@
         </div>
       </div>
 
-      <div class="dashboard-item">
-        <h4>Wrapper Library Results</h4>
-        <div class="chart-container-small"><canvas id="chart-dashboard-wrapper"></canvas></div>
-      </div>
-      <div class="dashboard-item">
-        <h4>Compression Results</h4>
-        <div class="chart-container-small"><canvas id="chart-dashboard-compression"></canvas></div>
-      </div>
+      <div class="tech-guide">
+        <div class="guide-section">
+          <h3>💾 Native Web Storage</h3>
+          <p>Native interfaces provided by the browser that leverage OS-level storage capabilities.</p>
+          <div class="guide-grid">
+            <div class="guide-item">
+              <span class="tag">Cookie</span>
+              <p>Ultra-lightweight data (&lt; 4KB) exchanged via HTTP headers. Automatically included in requests but
+                has
+                the lowest performance.</p>
+            </div>
+            <div class="guide-item">
+              <span class="tag">WebStorage</span>
+              <p>LocalStorage (persistent) & SessionStorage (session-based). 5MB limit. Synchronous operations can cause
+                UI freezing with large data.</p>
+            </div>
+            <div class="guide-item">
+              <span class="tag">IndexedDB</span>
+              <p>High-capacity asynchronous object store. Supports indexing and transactions. Best for data over several
+                hundred MBs.</p>
+            </div>
+            <div class="guide-item">
+              <span class="tag">OPFS</span>
+              <p>Origin Private File System. Sandboxed high-performance file system API. Used internally by SQLite WASM
+                for actual file I/O speeds.</p>
+            </div>
+            <div class="guide-item">
+              <span class="tag gray">WebSQL</span>
+              <p>A legacy standard no longer supported. Replaced today by the SQLite WASM + OPFS combination.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="guide-section">
+          <h3>📚 Wrapper Libraries</h3>
+          <p>High-level libraries that simplify usage and add advanced features on top of Native APIs.</p>
+          <div class="guide-grid">
+            <div class="guide-item">
+              <span class="tag">Dexie.js</span>
+              <p>A lightweight wrapper for IndexedDB. Simplifies complex IDB syntax and provides powerful querying
+                capabilities. (Base: <b>IndexedDB</b>)</p>
+            </div>
+            <div class="guide-item">
+              <span class="tag">localForage</span>
+              <p>A polyfill library that automatically selects the best storage in order: IndexedDB, WebSQL, then
+                LocalStorage. (Base: <b>Async IDB</b>)</p>
+            </div>
+            <div class="guide-item">
+              <span class="tag">SQLite (WASM)</span>
+              <p>The SQLite engine compiled to WebAssembly. Combined with OPFS for a full relational SQL DB experience
+                on the web. (Base: <b>OPFS/IDB</b>)</p>
+            </div>
+            <div class="guide-item">
+              <span class="tag">PouchDB</span>
+              <p>An offline-first DB implementing the CouchDB protocol. Features automatic synchronization with servers.
+                (Base: <b>IndexedDB/WebSQL</b>)</p>
+            </div>
+            <div class="guide-item">
+              <span class="tag">store.js</span>
+              <p>A compatibility-focused lightweight wrapper supporting almost all browsers, including legacy ones.
+                (Base: <b>LocalStorage</b>)</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="guide-section">
+          <h3>📦 Compression Engines</h3>
+          <p>Core algorithms designed to save storage and optimize data transfer.</p>
+          <div class="guide-grid">
+            <div class="guide-item">
+              <span class="tag">Gzip / Deflate</span>
+              <p>Standard compression methods. Modern browsers use the Native CompressionStream API for ultra-fast
+                processing.</p>
+            </div>
+            <div class="guide-item">
+              <span class="tag">Brotli</span>
+              <p>Offers significantly better compression ratios than Gzip for text but requires more resources during
+                compression.</p>
+            </div>
+            <div class="guide-item">
+              <span class="tag">zstd</span>
+              <p>Next-gen algorithm by Facebook. Offers the best balance between compression ratio and speed.
+                Implemented via WASM.</p>
+            </div>
+          </div>
+        </div>
       </div>
     </section>
 
-    <section class="logs-container">
-      <div class="logs-header">
-        <span>Terminal Logs</span>
-        <button id="btn-copy-logs" class="btn-secondary" style="padding: 0.25rem 0.5rem; font-size: 0.8rem;">Copy
-          Logs</button>
+    <!-- TAB: REPORT -->
+    <section id="tab-report" class="tab-content">
+      <div class="report-container">
+        <div class="report-header">
+          <div class="header-main">
+            <h2>Detailed Performance Report</h2>
+            <div class="report-actions">
+              <button id="btn-export-json" class="btn-outline">Export JSON</button>
+              <button id="btn-import-json" class="btn-outline">Import JSON</button>
+              <input type="file" id="input-import-json" style="display: none;" accept=".json">
+            </div>
+          </div>
+          <p>Benchmark results displayed by category and payload size.</p>
+        </div>
+
+        <div id="overall-progress" class="overall-progress" style="display: none; margin-bottom: 2rem;">
+          <div class="progress-info">
+            <span id="progress-text">Initializing...</span>
+            <span id="progress-percent">0%</span>
+          </div>
+          <div class="progress-bar-bg">
+            <div id="progress-bar-fill" class="progress-bar-fill"></div>
+          </div>
+        </div>
+
+        <div class="report-console" id="report-console">
+          <div class="console-header">Real-time Progress Logs</div>
+          <div class="console-body" id="console-logs">
+            <div class="log-entry system">Ready for benchmarking...</div>
+          </div>
+        </div>
+
+        <div class="report-section">
+          <h3 class="section-title">💾 Native Web Storage Results</h3>
+          <div id="report-list-native" class="scroll-list">
+            <div class="empty-state">No results yet. Run benchmarks to see reports.</div>
+          </div>
+        </div>
+
+        <div class="report-section">
+          <h3 class="section-title">📚 Wrapper Libraries Results</h3>
+          <div id="report-list-wrapper" class="scroll-list">
+            <div class="empty-state">No results yet.</div>
+          </div>
+        </div>
+
+        <div class="report-section">
+          <h3 class="section-title">📦 Compression Performance Results</h3>
+          <div id="report-list-compression" class="scroll-list">
+            <div class="empty-state">No results yet.</div>
+          </div>
+        </div>
       </div>
-      <div id="logs">Ready...</div>
     </section>
   </main>
 

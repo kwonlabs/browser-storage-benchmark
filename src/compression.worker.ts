@@ -2,7 +2,7 @@
 import * as fflate from 'fflate';
 import brotliPromise from 'brotli-wasm';
 // @ts-ignore
-import { Zstd } from 'zstd-wasm';
+import { init, compress, decompress } from '@bokuweb/zstd-wasm';
 
 self.onmessage = async (e) => {
     const { type, sizeName, payloadBuf } = e.data;
@@ -10,6 +10,9 @@ self.onmessage = async (e) => {
     if (type === 'start_compression') {
         const results: any = {};
         const uint8Payload = payloadBuf;
+
+        // Ensure WASM is initialized for zstd
+        await init();
 
         async function measure(name: string, compFn: () => Uint8Array | Promise<Uint8Array>, decompFn: (data: Uint8Array) => Promise<any> | any) {
             try {
@@ -97,10 +100,9 @@ self.onmessage = async (e) => {
         );
 
         // zstd (WASM)
-        const zstd = await Zstd.load();
         await measure('zstd',
-            () => zstd.compress(uint8Payload),
-            (data) => zstd.decompress(data)
+            () => compress(uint8Payload),
+            (data) => decompress(data)
         );
 
         self.postMessage({ type: 'done_compression', sizeName, payload: results });
