@@ -15,6 +15,8 @@ const SIZES: Record<string, number> = {
   '1gb': 1024 * 1024 * 1024
 };
 
+const STORAGE_QUOTA = 5 * 1024 * 1024; // 5MB limit for local/session storage
+
 // Interfaces
 interface TaskDef { category: string; sizeName: string; sizeValue: number; }
 interface BenchmarkResult { insert: number; read: number; update: number; delete: number; }
@@ -230,22 +232,30 @@ async function runMainThreadNative(sizeName: string, sizeValue: number) {
 
   // SessionStorage
   try {
-    results['SessionStorage'] = {
-      insert: await measureOperation(sizeValue, () => { const s = performance.now(); sessionStorage.setItem(k, str); return performance.now() - s; }),
-      read: await measureOperation(sizeValue, () => { const s = performance.now(); sessionStorage.getItem(k); return performance.now() - s; }),
-      update: await measureOperation(sizeValue, () => { const s = performance.now(); sessionStorage.setItem(k, modStr); return performance.now() - s; }),
-      delete: await measureOperation(sizeValue, () => { const s = performance.now(); sessionStorage.removeItem(k); return performance.now() - s; })
-    };
+    if (sizeValue > STORAGE_QUOTA) {
+      results['SessionStorage'] = { insert: -2, read: -2, update: -2, delete: -2 };
+    } else {
+      results['SessionStorage'] = {
+        insert: await measureOperation(sizeValue, () => { const s = performance.now(); sessionStorage.setItem(k, str); return performance.now() - s; }),
+        read: await measureOperation(sizeValue, () => { const s = performance.now(); sessionStorage.getItem(k); return performance.now() - s; }),
+        update: await measureOperation(sizeValue, () => { const s = performance.now(); sessionStorage.setItem(k, modStr); return performance.now() - s; }),
+        delete: await measureOperation(sizeValue, () => { const s = performance.now(); sessionStorage.removeItem(k); return performance.now() - s; })
+      };
+    }
   } catch (e) { results['SessionStorage'] = { insert: -1, read: -1, update: -1, delete: -1 }; }
 
   // LocalStorage
   try {
-    results['LocalStorage'] = {
-      insert: await measureOperation(sizeValue, () => { const s = performance.now(); localStorage.setItem(k, str); return performance.now() - s; }),
-      read: await measureOperation(sizeValue, () => { const s = performance.now(); localStorage.getItem(k); return performance.now() - s; }),
-      update: await measureOperation(sizeValue, () => { const s = performance.now(); localStorage.setItem(k, modStr); return performance.now() - s; }),
-      delete: await measureOperation(sizeValue, () => { const s = performance.now(); localStorage.removeItem(k); return performance.now() - s; })
-    };
+    if (sizeValue > STORAGE_QUOTA) {
+      results['LocalStorage'] = { insert: -2, read: -2, update: -2, delete: -2 };
+    } else {
+      results['LocalStorage'] = {
+        insert: await measureOperation(sizeValue, () => { const s = performance.now(); localStorage.setItem(k, str); return performance.now() - s; }),
+        read: await measureOperation(sizeValue, () => { const s = performance.now(); localStorage.getItem(k); return performance.now() - s; }),
+        update: await measureOperation(sizeValue, () => { const s = performance.now(); localStorage.setItem(k, modStr); return performance.now() - s; }),
+        delete: await measureOperation(sizeValue, () => { const s = performance.now(); localStorage.removeItem(k); return performance.now() - s; })
+      };
+    }
   } catch (e) { results['LocalStorage'] = { insert: -1, read: -1, update: -1, delete: -1 }; }
 
   return results;
@@ -262,12 +272,16 @@ async function runMainThreadWrapper(sizeName: string, sizeValue: number) {
   // store.js (usually uses localStorage fallback)
   try {
     if (typeof localStorage !== 'undefined') {
-      results['store.js'] = {
-        insert: await measureOperation(sizeValue, () => { const s = performance.now(); localStorage.setItem(k, str); return performance.now() - s; }),
-        read: await measureOperation(sizeValue, () => { const s = performance.now(); localStorage.getItem(k); return performance.now() - s; }),
-        update: await measureOperation(sizeValue, () => { const s = performance.now(); localStorage.setItem(k, modStr); return performance.now() - s; }),
-        delete: await measureOperation(sizeValue, () => { const s = performance.now(); localStorage.removeItem(k); return performance.now() - s; })
-      };
+      if (sizeValue > STORAGE_QUOTA) {
+        results['store.js'] = { insert: -2, read: -2, update: -2, delete: -2 };
+      } else {
+        results['store.js'] = {
+          insert: await measureOperation(sizeValue, () => { const s = performance.now(); localStorage.setItem(k, str); return performance.now() - s; }),
+          read: await measureOperation(sizeValue, () => { const s = performance.now(); localStorage.getItem(k); return performance.now() - s; }),
+          update: await measureOperation(sizeValue, () => { const s = performance.now(); localStorage.setItem(k, modStr); return performance.now() - s; }),
+          delete: await measureOperation(sizeValue, () => { const s = performance.now(); localStorage.removeItem(k); return performance.now() - s; })
+        };
+      }
     } else {
       results['store.js'] = { insert: -1, read: -1, update: -1, delete: -1 };
     }

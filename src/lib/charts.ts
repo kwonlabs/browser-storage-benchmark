@@ -81,7 +81,7 @@ export const TREND_OPTIONS = {
 } as any;
 
 export function mapVal(v: any) {
-    if (v === -1 || v === undefined || v === null) return null;
+    if (v === -1 || v === -2 || v === undefined || v === null) return null;
     return Math.max(v, 0.0001);
 }
 
