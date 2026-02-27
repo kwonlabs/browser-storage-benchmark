@@ -36,6 +36,13 @@ export default defineConfig({
     exclude: ['@sqlite.org/sqlite-wasm', 'brotli-wasm', '@bokuweb/zstd-wasm']
   },
   logLevel: 'info', // Can be set to 'warn' or 'error' if noise persists
+  worker: {
+    format: 'es',
+    plugins: () => [
+      wasm(),
+      topLevelAwait()
+    ]
+  },
   server: {
     headers: {
       'Cross-Origin-Opener-Policy': 'same-origin',

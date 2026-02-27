@@ -46,8 +46,57 @@ self.onmessage = async (e) => {
             results['PouchDB'] = { insert: i, read: r, update: u, delete: d };
         } catch (err) { results['PouchDB'] = { insert: -1, read: -1, update: -1, delete: -1 }; }
 
-        // SQLite
-        results['SQLite'] = { insert: -1, read: -1, update: -1, delete: -1 };
+        // SQLite (WASM + OPFS)
+        try {
+            // @ts-ignore
+            const { default: sqlite3InitModule } = await import('@sqlite.org/sqlite-wasm');
+            const sqlite3 = await sqlite3InitModule();
+
+            if ('opfs' in sqlite3) {
+                const db = new sqlite3.oo1.OpfsDb('/bench.sqlite3', 'c');
+                try {
+                    db.exec("CREATE TABLE IF NOT EXISTS data (id TEXT PRIMARY KEY, val TEXT)");
+                    db.exec("DELETE FROM data");
+
+                    const iStart = performance.now();
+                    db.exec({
+                        sql: "INSERT INTO data (id, val) VALUES (?, ?)",
+                        bind: ['k', payloadStr]
+                    });
+                    const i = performance.now() - iStart;
+
+                    const rStart = performance.now();
+                    db.exec({
+                        sql: "SELECT val FROM data WHERE id = ?",
+                        bind: ['k'],
+                        returnValue: "resultRows"
+                    });
+                    const r = performance.now() - rStart;
+
+                    const uStart = performance.now();
+                    db.exec({
+                        sql: "UPDATE data SET val = ? WHERE id = ?",
+                        bind: [payloadStr + 'm', 'k']
+                    });
+                    const u = performance.now() - uStart;
+
+                    const dStart = performance.now();
+                    db.exec({
+                        sql: "DELETE FROM data WHERE id = ?",
+                        bind: ['k']
+                    });
+                    const d = performance.now() - dStart;
+
+                    results['SQLite'] = { insert: i, read: r, update: u, delete: d };
+                } finally {
+                    db.close();
+                }
+            } else {
+                results['SQLite'] = { insert: -1, read: -1, update: -1, delete: -1 };
+            }
+        } catch (err) {
+            results['SQLite'] = { insert: -1, read: -1, update: -1, delete: -1 };
+        }
 
         self.postMessage({ type: 'done_wrapper', sizeName, payload: results });
     }

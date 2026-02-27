@@ -4,79 +4,90 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Comprehensive Web Storage Benchmark</title>
+  <title>Browser Storage Benchmark</title>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
 </head>
 
 <body>
   <header>
-    <div class="title-section">
-      <div class="logo-area">
-        <h1>Browser Storage & Compression Analyzer</h1>
+    <div class="header-container">
+      <div class="header-left">
+        <h1 class="logo">Browser Storage Benchmark</h1>
       </div>
-      <nav class="tabs">
-        <button class="tab-btn active" data-target="tab-home">🏠 Home & Guide</button>
-        <button class="tab-btn" data-target="tab-report">📊 Performance Report</button>
-      </nav>
+      <div class="header-right">
+        <nav class="tabs">
+          <button class="tab-btn active" data-target="tab-home">Home & Guide</button>
+          <button class="tab-btn" data-target="tab-report">Performance Report</button>
+        </nav>
+      </div>
+    </div>
   </header>
 
   <main>
     <!-- TAB: HOME & GUIDE -->
     <section id="tab-home" class="tab-content active">
       <div class="hero-section">
-        <h2>Compare and analyze modern web browser storage and compression technologies.</h2>
+        <h2>Web Storage Performance Benchmark</h2>
+        <p>Analyze latency and compression efficiency of modern web technologies.</p>
+
         <div class="hero-actions">
           <button id="btn-run-all" class="btn-primary-large">Run Benchmarks (128B - 10MB)</button>
           <div class="advanced-toggle">
-            <a href="#" id="btn-toggle-advanced" class="link-advanced">Advanced</a>
+            <a href="#" id="btn-toggle-advanced" class="link-advanced">Advanced Settings</a>
           </div>
         </div>
 
         <div id="advanced-controller" class="advanced-panel" style="display: none;">
-          <div class="action-section">
+          <div class="matrix-controller">
             <h3>Benchmark Matrix Controller</h3>
-            <p style="margin-bottom: 1.5rem; font-size: 0.9rem; color: var(--text-muted);">Configure custom test
-              scenarios. (100MB+ may take significant time)</p>
+            <p class="matrix-subtitle">Configure custom test scenarios. (100MB+ may take significant time)</p>
 
-            <div class="runner-config">
-              <div class="config-group">
-                <div class="config-header">
-                  <span class="config-label">1. Categories</span>
-                  <div class="selection-tools">
-                    <button class="btn-text" id="cat-all">All</button>
-                    <button class="btn-text" id="cat-none">None</button>
+            <div class="matrix-grid">
+              <div class="matrix-row">
+                <div class="row-label">
+                  <span>1. Targets</span>
+                  <div class="row-actions">
+                    <button class="btn-text-mini" id="cat-all">All</button>
+                    <button class="btn-text-mini" id="cat-none">None</button>
                   </div>
                 </div>
-                <div class="checkbox-group">
-                  <label><input type="checkbox" class="category-check" value="native" checked> Native</label>
-                  <label><input type="checkbox" class="category-check" value="wrapper" checked> Library</label>
-                  <label><input type="checkbox" class="category-check" value="compression" checked> Compression</label>
-                </div>
-              </div>
-
-              <div class="config-group" style="flex: 1; min-width: 300px;">
-                <div class="config-header">
-                  <span class="config-label">2. Sizes</span>
-                  <div class="selection-tools">
-                    <button class="btn-text" id="size-all">All</button>
-                    <button class="btn-text" id="size-none">None</button>
+                <div class="row-content">
+                  <div class="checkbox-list">
+                    <label><input type="checkbox" class="category-check" value="native" checked> Native</label>
+                    <label><input type="checkbox" class="category-check" value="wrapper" checked> Wrapper</label>
+                    <label><input type="checkbox" class="category-check" value="compression" checked>
+                      Compression</label>
                   </div>
                 </div>
-                <div class="checkbox-group size-selectors">
-                  <label><input type="checkbox" class="size-check" value="128b" checked> 128B</label>
-                  <label><input type="checkbox" class="size-check" value="1kb" checked> 1KB</label>
-                  <label><input type="checkbox" class="size-check" value="10kb" checked> 10KB</label>
-                  <label><input type="checkbox" class="size-check" value="100kb" checked> 100KB</label>
-                  <label><input type="checkbox" class="size-check" value="1mb" checked> 1MB</label>
-                  <label><input type="checkbox" class="size-check" value="10mb" checked> 10MB</label>
-                  <label><input type="checkbox" class="size-check" value="100mb"> 100MB</label>
-                  <label><input type="checkbox" class="size-check" value="1gb"> 1GB</label>
-                </div>
               </div>
 
-              <div class="config-group">
-                <button id="btn-run-custom" class="btn-primary" style="padding: 0.75rem 2rem; font-size: 1rem;">▶️
-                  Execute Selected</button>
+              <div class="matrix-row">
+                <div class="row-label">
+                  <span>2. Sizes</span>
+                  <div class="row-actions">
+                    <button class="btn-text-mini" id="size-all">All</button>
+                    <button class="btn-text-mini" id="size-none">None</button>
+                  </div>
+                </div>
+                <div class="row-content">
+                  <div class="checkbox-list">
+                    <label><input type="checkbox" class="size-check" value="128b" checked> 128B</label>
+                    <label><input type="checkbox" class="size-check" value="1kb" checked> 1KB</label>
+                    <label><input type="checkbox" class="size-check" value="10kb" checked> 10KB</label>
+                    <label><input type="checkbox" class="size-check" value="100kb" checked> 100KB</label>
+                    <label><input type="checkbox" class="size-check" value="1mb" checked> 1MB</label>
+                    <label><input type="checkbox" class="size-check" value="10mb" checked> 10MB</label>
+                    <label class="warning-label" title="May freeze browser"><input type="checkbox" class="size-check"
+                        value="100mb"> 100MB*</label>
+                    <label class="warning-label" title="High memory usage"><input type="checkbox" class="size-check"
+                        value="1gb"> 1GB*</label>
+                  </div>
+                </div>
               </div>
+            </div>
+
+            <div class="matrix-execute">
+              <button id="btn-run-custom" class="btn-secondary-full">Execute Selected Configuration</button>
             </div>
           </div>
         </div>
@@ -93,91 +104,156 @@
       </div>
 
       <div class="tech-guide">
-        <div class="guide-section">
-          <h3>💾 Native Web Storage</h3>
-          <p>Native interfaces provided by the browser that leverage OS-level storage capabilities.</p>
-          <div class="guide-grid">
-            <div class="guide-item">
-              <span class="tag">Cookie</span>
-              <p>Ultra-lightweight data (&lt; 4KB) exchanged via HTTP headers. Automatically included in requests but
-                has
-                the lowest performance.</p>
+        <!-- Native Section -->
+        <section class="guide-group">
+          <div class="group-header">
+            <h3>🌐 Native Web Storage</h3>
+            <p>Direct browser interfaces for localized data persistence.</p>
+          </div>
+          <div class="guide-grid-large">
+            <div class="guide-card">
+              <div class="card-icon">🍪</div>
+              <div class="card-body">
+                <h4>Cookie</h4>
+                <p>Ultra-lightweight data (&lt; 4KB) exchanged via HTTP headers. Best for session tokens and simple
+                  flags.</p>
+              </div>
             </div>
-            <div class="guide-item">
-              <span class="tag">WebStorage</span>
-              <p>LocalStorage (persistent) & SessionStorage (session-based). 5MB limit. Synchronous operations can cause
-                UI freezing with large data.</p>
+            <div class="guide-card">
+              <div class="card-icon">⏱️</div>
+              <div class="card-body">
+                <h4>SessionStorage</h4>
+                <p>Volatile key-value storage tied to the current tab. Fast, synchronous, and automatically cleared on
+                  closure.</p>
+              </div>
             </div>
-            <div class="guide-item">
-              <span class="tag">IndexedDB</span>
-              <p>High-capacity asynchronous object store. Supports indexing and transactions. Best for data over several
-                hundred MBs.</p>
+            <div class="guide-card">
+              <div class="card-icon">💾</div>
+              <div class="card-body">
+                <h4>LocalStorage</h4>
+                <p>Persistent key-value storage with a simple API. Limited to ~5MB-10MB and synchronous in nature.</p>
+              </div>
             </div>
-            <div class="guide-item">
-              <span class="tag">OPFS</span>
-              <p>Origin Private File System. Sandboxed high-performance file system API. Used internally by SQLite WASM
-                for actual file I/O speeds.</p>
+            <div class="guide-card">
+              <div class="card-icon">🛡️</div>
+              <div class="card-body">
+                <h4>Cache API</h4>
+                <p>Asynchronous storage for Request/Response pairs. Ideal for offline assets and large binary payloads.
+                </p>
+              </div>
             </div>
-            <div class="guide-item">
-              <span class="tag gray">WebSQL</span>
-              <p>A legacy standard no longer supported. Replaced today by the SQLite WASM + OPFS combination.</p>
+            <div class="guide-card">
+              <div class="card-icon">🗂️</div>
+              <div class="card-body">
+                <h4>IndexedDB</h4>
+                <p>The standard for client-side structured data. Supports transactions, indexes, and large binary blobs.
+                </p>
+              </div>
+            </div>
+            <div class="guide-card">
+              <div class="card-icon">📂</div>
+              <div class="card-body">
+                <h4>OPFS</h4>
+                <p>Origin Private File System provides high-speed, direct file I/O within a sandboxed origin
+                  environment.</p>
+              </div>
             </div>
           </div>
-        </div>
+        </section>
 
-        <div class="guide-section">
-          <h3>📚 Wrapper Libraries</h3>
-          <p>High-level libraries that simplify usage and add advanced features on top of Native APIs.</p>
-          <div class="guide-grid">
-            <div class="guide-item">
-              <span class="tag">Dexie.js</span>
-              <p>A lightweight wrapper for IndexedDB. Simplifies complex IDB syntax and provides powerful querying
-                capabilities. (Base: <b>IndexedDB</b>)</p>
+        <!-- Wrapper Section -->
+        <section class="guide-group">
+          <div class="group-header">
+            <h3>📦 Wrapper Libraries</h3>
+            <p>Abstractions that simplify complex storage APIs and ensure compatibility.</p>
+          </div>
+          <div class="guide-grid-large">
+            <div class="guide-card">
+              <div class="card-icon">🛠️</div>
+              <div class="card-body">
+                <h4>store.js</h4>
+                <p>A zero-dependency wrapper that picks the best storage (starts with LocalStorage) with a clean,
+                  unified API.</p>
+              </div>
             </div>
-            <div class="guide-item">
-              <span class="tag">localForage</span>
-              <p>A polyfill library that automatically selects the best storage in order: IndexedDB, WebSQL, then
-                LocalStorage. (Base: <b>Async IDB</b>)</p>
+            <div class="guide-card">
+              <div class="card-icon">💎</div>
+              <div class="card-body">
+                <h4>SQLite (WASM)</h4>
+                <p>The legendary relational database running via WebAssembly. Provides full SQL capabilities on top of
+                  OPFS.</p>
+              </div>
             </div>
-            <div class="guide-item">
-              <span class="tag">SQLite (WASM)</span>
-              <p>The SQLite engine compiled to WebAssembly. Combined with OPFS for a full relational SQL DB experience
-                on the web. (Base: <b>OPFS/IDB</b>)</p>
+            <div class="guide-card">
+              <div class="card-icon">⛓️</div>
+              <div class="card-body">
+                <h4>localForage</h4>
+                <p>An asynchronous fallback library (IDB -> WebSQL -> LocalStorage) using a Simple LocalStorage-like
+                  API.</p>
+              </div>
             </div>
-            <div class="guide-item">
-              <span class="tag">PouchDB</span>
-              <p>An offline-first DB implementing the CouchDB protocol. Features automatic synchronization with servers.
-                (Base: <b>IndexedDB/WebSQL</b>)</p>
+            <div class="guide-card">
+              <div class="card-icon">⚡</div>
+              <div class="card-body">
+                <h4>Dexie.js</h4>
+                <p>Optimized IndexedDB wrapper providing a fluent API, robust transactions, and easy schema management.
+                </p>
+              </div>
             </div>
-            <div class="guide-item">
-              <span class="tag">store.js</span>
-              <p>A compatibility-focused lightweight wrapper supporting almost all browsers, including legacy ones.
-                (Base: <b>LocalStorage</b>)</p>
+            <div class="guide-card">
+              <div class="card-icon">🐶</div>
+              <div class="card-body">
+                <h4>PouchDB</h4>
+                <p>An offline-first browser DB that can automatically sync with CouchDB and other remote instances.</p>
+              </div>
             </div>
           </div>
-        </div>
+        </section>
 
-        <div class="guide-section">
-          <h3>📦 Compression Engines</h3>
-          <p>Core algorithms designed to save storage and optimize data transfer.</p>
-          <div class="guide-grid">
-            <div class="guide-item">
-              <span class="tag">Gzip / Deflate</span>
-              <p>Standard compression methods. Modern browsers use the Native CompressionStream API for ultra-fast
-                processing.</p>
+        <!-- Compression Section -->
+        <section class="guide-group">
+          <div class="group-header">
+            <h3>🗜️ Compression Engines</h3>
+            <p>Algorithms used to reduce payload size before storage or transmission.</p>
+          </div>
+          <div class="guide-grid-large">
+            <div class="guide-card">
+              <div class="card-icon">📦</div>
+              <div class="card-body">
+                <h4>ZIP</h4>
+                <p>Widely used format balancing compression ratio and speed. Great for multi-file payloads.</p>
+              </div>
             </div>
-            <div class="guide-item">
-              <span class="tag">Brotli</span>
-              <p>Offers significantly better compression ratios than Gzip for text but requires more resources during
-                compression.</p>
+            <div class="guide-card">
+              <div class="card-icon">🌪️</div>
+              <div class="card-body">
+                <h4>Gzip</h4>
+                <p>Native browser compression stream using the DEFLATE algorithm. Highly efficient for text data.</p>
+              </div>
             </div>
-            <div class="guide-item">
-              <span class="tag">zstd</span>
-              <p>Next-gen algorithm by Facebook. Offers the best balance between compression ratio and speed.
-                Implemented via WASM.</p>
+            <div class="guide-card">
+              <div class="card-icon">💨</div>
+              <div class="card-body">
+                <h4>Deflate</h4>
+                <p>Lower-level algorithm used by ZIP and Gzip, optimized for speed and memory efficiency.</p>
+              </div>
+            </div>
+            <div class="guide-card">
+              <div class="card-icon">🍞</div>
+              <div class="card-body">
+                <h4>Brotli</h4>
+                <p>Modern algorithm by Google offering superior compression ratios for web assets compared to Gzip.</p>
+              </div>
+            </div>
+            <div class="guide-card">
+              <div class="card-icon">🦖</div>
+              <div class="card-body">
+                <h4>zstd</h4>
+                <p>Real-time compression algorithm from Meta. Provides high ratios at blistering speeds via WASM.</p>
+              </div>
             </div>
           </div>
-        </div>
+        </section>
       </div>
     </section>
 
@@ -193,44 +269,36 @@
               <input type="file" id="input-import-json" style="display: none;" accept=".json">
             </div>
           </div>
-          <p>Benchmark results displayed by category and payload size.</p>
-        </div>
-
-        <div id="overall-progress" class="overall-progress" style="display: none; margin-bottom: 2rem;">
-          <div class="progress-info">
-            <span id="progress-text">Initializing...</span>
-            <span id="progress-percent">0%</span>
-          </div>
-          <div class="progress-bar-bg">
-            <div id="progress-bar-fill" class="progress-bar-fill"></div>
-          </div>
+          <p>Real-time updates and historical performance metrics.</p>
         </div>
 
         <div class="report-console" id="report-console">
-          <div class="console-header">Real-time Progress Logs</div>
+          <div class="console-header">Benchmark Console Logs</div>
           <div class="console-body" id="console-logs">
-            <div class="log-entry system">Ready for benchmarking...</div>
+            <div class="log-entry system">System initialized. Waiting for instructions...</div>
           </div>
         </div>
 
-        <div class="report-section">
-          <h3 class="section-title">💾 Native Web Storage Results</h3>
-          <div id="report-list-native" class="scroll-list">
-            <div class="empty-state">No results yet. Run benchmarks to see reports.</div>
+        <div class="report-grid">
+          <div class="report-section">
+            <h3 class="section-title">🌐 Native Web Storage</h3>
+            <div id="report-list-native" class="scroll-list">
+              <div class="empty-state">Run benchmarks to populate this section.</div>
+            </div>
           </div>
-        </div>
 
-        <div class="report-section">
-          <h3 class="section-title">📚 Wrapper Libraries Results</h3>
-          <div id="report-list-wrapper" class="scroll-list">
-            <div class="empty-state">No results yet.</div>
+          <div class="report-section">
+            <h3 class="section-title">📚 Wrapper Libraries</h3>
+            <div id="report-list-wrapper" class="scroll-list">
+              <div class="empty-state">No library data available yet.</div>
+            </div>
           </div>
-        </div>
 
-        <div class="report-section">
-          <h3 class="section-title">📦 Compression Performance Results</h3>
-          <div id="report-list-compression" class="scroll-list">
-            <div class="empty-state">No results yet.</div>
+          <div class="report-section">
+            <h3 class="section-title">📦 Compression Engines</h3>
+            <div id="report-list-compression" class="scroll-list">
+              <div class="empty-state">No compression metrics available yet.</div>
+            </div>
           </div>
         </div>
       </div>

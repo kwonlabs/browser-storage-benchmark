@@ -28,9 +28,9 @@ self.onmessage = async (e) => {
             await cache.delete(url);
             const deleteTime = performance.now() - deleteStart;
 
-            results['CacheAPI'] = { insert: insertTime, read: readTime, update: updateTime, delete: deleteTime };
+            results['Cache API'] = { insert: insertTime, read: readTime, update: updateTime, delete: deleteTime };
         } catch (err: any) {
-            results['CacheAPI'] = { insert: -1, read: -1, update: -1, delete: -1 };
+            results['Cache API'] = { insert: -1, read: -1, update: -1, delete: -1 };
         }
 
         // IndexedDB (Direct)

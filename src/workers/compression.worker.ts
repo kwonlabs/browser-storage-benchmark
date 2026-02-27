@@ -4,6 +4,10 @@ import brotliPromise from 'brotli-wasm';
 // @ts-ignore
 import { init, compress, decompress } from '@bokuweb/zstd-wasm';
 
+// Initialize WASM modules once
+const zstdPromise = init();
+const brotliPromiseReady = brotliPromise;
+
 self.onmessage = async (e) => {
     const { type, sizeName, payloadBuf } = e.data;
 
@@ -11,8 +15,9 @@ self.onmessage = async (e) => {
         const results: any = {};
         const uint8Payload = payloadBuf;
 
-        // Ensure WASM is initialized for zstd
-        await init();
+        // Ensure WASM is initialized
+        await zstdPromise;
+        const brotli = await brotliPromiseReady;
 
         async function measure(name: string, compFn: () => Uint8Array | Promise<Uint8Array>, decompFn: (data: Uint8Array) => Promise<any> | any) {
             try {
@@ -93,7 +98,6 @@ self.onmessage = async (e) => {
         );
 
         // Brotli (WASM)
-        const brotli = await brotliPromise;
         await measure('Brotli',
             () => brotli.compress(uint8Payload),
             (data) => brotli.decompress(data)

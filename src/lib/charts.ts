@@ -76,21 +76,21 @@ export function createChart(ctx: HTMLCanvasElement, type: 'native' | 'wrapper' |
         return new Chart(ctx, {
             type: 'bar',
             plugins: [skipPlugin],
-            data: { labels: ['Cookies', 'SessionStorage', 'LocalStorage', 'CacheAPI', 'IndexedDB', 'OPFS'], datasets: [] },
-            options: { ...COMMON_OPTIONS, plugins: { ...COMMON_OPTIONS.plugins, title: { display: true, text: `Native (${sizeName.toUpperCase()})`, color: '#f8fafc' } } }
+            data: { labels: ['Cookie', 'SessionStorage', 'LocalStorage', 'Cache API', 'IndexedDB', 'OPFS'], datasets: [] },
+            options: { ...COMMON_OPTIONS, plugins: { ...COMMON_OPTIONS.plugins, title: { display: true, text: `Native Storage (${sizeName.toUpperCase()})`, color: '#f8fafc' } } }
         });
     } else if (type === 'wrapper') {
         return new Chart(ctx, {
             type: 'bar',
             plugins: [skipPlugin],
             data: { labels: ['store.js', 'SQLite', 'localForage', 'Dexie', 'PouchDB'], datasets: [] },
-            options: { ...COMMON_OPTIONS, plugins: { ...COMMON_OPTIONS.plugins, title: { display: true, text: `Library (${sizeName.toUpperCase()})`, color: '#f8fafc' } } }
+            options: { ...COMMON_OPTIONS, plugins: { ...COMMON_OPTIONS.plugins, title: { display: true, text: `Wrapper Library (${sizeName.toUpperCase()})`, color: '#f8fafc' } } }
         });
     } else {
         return new Chart(ctx, {
             type: 'bar',
-            data: { labels: ['None', 'ZIP', 'Gzip', 'Deflate', 'Brotli', 'zstd'], datasets: [] },
-            options: { ...COMP_OPTIONS, plugins: { ...COMP_OPTIONS.plugins, title: { display: true, text: `Compression (${sizeName.toUpperCase()})`, color: '#f8fafc' } } }
+            data: { labels: ['ZIP', 'Gzip', 'Deflate', 'Brotli', 'zstd'], datasets: [] },
+            options: { ...COMP_OPTIONS, plugins: { ...COMP_OPTIONS.plugins, title: { display: true, text: `Compression Engine (${sizeName.toUpperCase()})`, color: '#f8fafc' } } }
         });
     }
 }

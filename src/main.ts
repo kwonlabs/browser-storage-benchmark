@@ -1,5 +1,5 @@
 import './style.css';
-import { createChart, COLORS } from './charts';
+import { createChart, COLORS } from './lib/charts';
 
 // Constants
 const SIZES = {
@@ -26,9 +26,9 @@ let latestData: any = {
 };
 
 // Worker Instances
-const nativeWorker = new Worker(new URL('./native.worker.ts', import.meta.url), { type: 'module' });
-const wrapperWorker = new Worker(new URL('./wrapper.worker.ts', import.meta.url), { type: 'module' });
-const compressionWorker = new Worker(new URL('./compression.worker.ts', import.meta.url), { type: 'module' });
+const nativeWorker = new Worker(new URL('./workers/native.worker.ts', import.meta.url), { type: 'module' });
+const wrapperWorker = new Worker(new URL('./workers/wrapper.worker.ts', import.meta.url), { type: 'module' });
+const compressionWorker = new Worker(new URL('./workers/compression.worker.ts', import.meta.url), { type: 'module' });
 
 // UI Elements
 const btnRunAll = document.getElementById('btn-run-all') as HTMLButtonElement;
@@ -153,11 +153,64 @@ function updateProgress(percent: number, msg: string) {
   progressText.innerText = msg;
 }
 
-function runNext() {
+async function runMainThreadNative(_sizeName: string, payloadStr: string) {
+  const results: any = {};
+
+  // Cookie
+  try {
+    const sI = performance.now(); document.cookie = `bench=${payloadStr};path=/;max-age=60`; const i = performance.now() - sI;
+    const sR = performance.now(); document.cookie; const r = performance.now() - sR;
+    const sU = performance.now(); document.cookie = `bench=${payloadStr}mod;path=/;max-age=60`; const u = performance.now() - sU;
+    const sD = performance.now(); document.cookie = `bench=;path=/;max-age=0`; const d = performance.now() - sD;
+    results['Cookie'] = { insert: i, read: r, update: u, delete: d };
+  } catch (e) { results['Cookie'] = { insert: -1, read: -1, update: -1, delete: -1 }; }
+
+  // SessionStorage
+  try {
+    sessionStorage.clear();
+    const sI = performance.now(); sessionStorage.setItem('k', payloadStr); const i = performance.now() - sI;
+    const sR = performance.now(); sessionStorage.getItem('k'); const r = performance.now() - sR;
+    const sU = performance.now(); sessionStorage.setItem('k', payloadStr + 'm'); const u = performance.now() - sU;
+    const sD = performance.now(); sessionStorage.removeItem('k'); const d = performance.now() - sD;
+    results['SessionStorage'] = { insert: i, read: r, update: u, delete: d };
+  } catch (e) { results['SessionStorage'] = { insert: -1, read: -1, update: -1, delete: -1 }; }
+
+  // LocalStorage
+  try {
+    localStorage.clear();
+    const sI = performance.now(); localStorage.setItem('k', payloadStr); const i = performance.now() - sI;
+    const sR = performance.now(); localStorage.getItem('k'); const r = performance.now() - sR;
+    const sU = performance.now(); localStorage.setItem('k', payloadStr + 'm'); const u = performance.now() - sU;
+    const sD = performance.now(); localStorage.removeItem('k'); const d = performance.now() - sD;
+    results['LocalStorage'] = { insert: i, read: r, update: u, delete: d };
+  } catch (e) { results['LocalStorage'] = { insert: -1, read: -1, update: -1, delete: -1 }; }
+
+  return results;
+}
+
+async function runMainThreadWrapper(_sizeName: string, payloadStr: string) {
+  const results: any = {};
+  // store.js (usually uses localStorage)
+  try {
+    if (typeof localStorage !== 'undefined') {
+      localStorage.clear();
+      const sI = performance.now(); localStorage.setItem('st', payloadStr); const i = performance.now() - sI;
+      const sR = performance.now(); localStorage.getItem('st'); const r = performance.now() - sR;
+      const sU = performance.now(); localStorage.setItem('st', payloadStr + 'm'); const u = performance.now() - sU;
+      const sD = performance.now(); localStorage.removeItem('st'); const d = performance.now() - sD;
+      results['store.js'] = { insert: i, read: r, update: u, delete: d };
+    } else {
+      results['store.js'] = { insert: -1, read: -1, update: -1, delete: -1 };
+    }
+  } catch (e) { results['store.js'] = { insert: -1, read: -1, update: -1, delete: -1 }; }
+  return results;
+}
+
+async function runNext() {
   if (testQueue.length === 0) {
     isRunning = false;
     updateProgress(100, 'All benchmarks completed!');
-    addLog('All tasks finished successfully.', 'system');
+    addLog('All tasks finished successfully.', 'success');
     return;
   }
 
@@ -171,8 +224,12 @@ function runNext() {
   const { str, buf } = generatePayload(sizeValue);
 
   if (task.category === 'native') {
+    const mainResults = await runMainThreadNative(task.sizeName, str);
+    latestData.native[task.sizeName] = { ...mainResults };
     nativeWorker.postMessage({ type: 'start_native', sizeName: task.sizeName, payloadStr: str, payloadBuf: buf });
   } else if (task.category === 'wrapper') {
+    const mainResults = await runMainThreadWrapper(task.sizeName, str);
+    latestData.wrapper[task.sizeName] = { ...mainResults };
     wrapperWorker.postMessage({ type: 'start_wrapper', sizeName: task.sizeName, payloadStr: str });
   } else if (task.category === 'compression') {
     compressionWorker.postMessage({ type: 'start_compression', sizeName: task.sizeName, payloadStr: str, payloadBuf: buf });
@@ -197,17 +254,17 @@ async function startBenchmark(tasks: { category: string, sizeName: string }[]) {
 // Worker Handlers
 nativeWorker.onmessage = (e) => {
   const { sizeName, payload } = e.data;
-  latestData.native[sizeName] = payload;
+  latestData.native[sizeName] = { ...latestData.native[sizeName], ...payload };
   addLog(`Native - ${sizeName.toUpperCase()} completed.`, 'success');
-  updateChartData('native', sizeName, payload);
+  updateChartData('native', sizeName, latestData.native[sizeName]);
   runNext();
 };
 
 wrapperWorker.onmessage = (e) => {
   const { sizeName, payload } = e.data;
-  latestData.wrapper[sizeName] = payload;
+  latestData.wrapper[sizeName] = { ...latestData.wrapper[sizeName], ...payload };
   addLog(`Library - ${sizeName.toUpperCase()} completed.`, 'success');
-  updateChartData('wrapper', sizeName, payload);
+  updateChartData('wrapper', sizeName, latestData.wrapper[sizeName]);
   runNext();
 };
 
@@ -234,7 +291,7 @@ btnToggleAdvanced.addEventListener('click', (e) => {
   e.preventDefault();
   const isHidden = advancedPanel.style.display === 'none';
   advancedPanel.style.display = isHidden ? 'block' : 'none';
-  btnToggleAdvanced.innerText = isHidden ? 'Hide Advanced' : 'Advanced';
+  btnToggleAdvanced.innerText = isHidden ? 'Hide Advanced Settings' : 'Advanced Settings';
 });
 
 btnCatAll.addEventListener('click', () => categoryChecks.forEach(c => c.checked = true));
