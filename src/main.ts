@@ -303,7 +303,9 @@ async function runNext() {
 
   const task = testQueue.shift()!;
   completedTasks++;
-  const percent = Math.round((completedTasks / totalTasks) * 100);
+  // Calculate percent but cap it at 95% if there are more tasks, to avoid looking "finished" early.
+  // Or simpler: progress = ((completedTasks - 0.5) / totalTasks) * 100
+  const percent = Math.round(((completedTasks - 0.5) / totalTasks) * 100);
   updateProgress(percent, `Running ${task.category.toUpperCase()} - ${task.sizeName.toUpperCase()}...`);
   addLog(`Executing: ${task.category.toUpperCase()} at ${task.sizeName.toUpperCase()}`);
 
