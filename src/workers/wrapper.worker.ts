@@ -43,17 +43,14 @@ self.onmessage = async (e) => {
             const pdb = new PouchDB('bench-pouch');
             results['PouchDB'] = {
                 insert: await measureOperation(sizeValue, async () => {
-                    const s = performance.now();
+                    // Pre-cleanup to ensure pure insert measurement
                     try {
                         const existing: any = await pdb.get(k);
-                        await pdb.put({ _id: k, _rev: existing._rev, val: str });
-                    } catch (err: any) {
-                        if (err.status === 404) {
-                            await pdb.put({ _id: k, val: str });
-                        } else {
-                            throw err;
-                        }
-                    }
+                        await pdb.remove(existing);
+                    } catch (e) { /* ignore */ }
+
+                    const s = performance.now();
+                    await pdb.put({ _id: k, val: str });
                     return performance.now() - s;
                 }),
                 read: await measureOperation(sizeValue, async () => { const s = performance.now(); await pdb.get(k); return performance.now() - s; }),
