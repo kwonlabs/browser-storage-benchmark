@@ -58,13 +58,13 @@ self.onmessage = async (e) => {
             results['IndexedDB'] = { insert: -1, read: -1, update: -1, delete: -1 };
         }
 
-        // OPFS
+        // OPFS (Async)
         try {
             const root = await navigator.storage.getDirectory();
-            const fileName = `bench-file-${sizeName}`;
+            const fileName = `bench-file-async-${sizeName}`;
             const fileHandle = await root.getFileHandle(fileName, { create: true });
 
-            results['OPFS'] = {
+            results['OPFS (Async)'] = {
                 insert: await measureOperation(sizeValue, async () => {
                     const s = performance.now();
                     const writable = await fileHandle.createWritable();
@@ -92,7 +92,54 @@ self.onmessage = async (e) => {
                 })
             };
         } catch (err) {
-            results['OPFS'] = { insert: -1, read: -1, update: -1, delete: -1 };
+            results['OPFS (Async)'] = { insert: -1, read: -1, update: -1, delete: -1 };
+        }
+
+        // OPFS (Sync)
+        try {
+            const root = await navigator.storage.getDirectory();
+            const fileName = `bench-file-sync-${sizeName}`;
+            const fileHandle = await root.getFileHandle(fileName, { create: true });
+            const encoder = new TextEncoder();
+            const strBuf = encoder.encode(str);
+            const modStrBuf = encoder.encode(modStr);
+
+            results['OPFS (Sync)'] = {
+                insert: await measureOperation(sizeValue, async () => {
+                    const s = performance.now();
+                    const accessHandle = await (fileHandle as any).createSyncAccessHandle();
+                    accessHandle.write(strBuf);
+                    accessHandle.flush();
+                    accessHandle.close();
+                    return performance.now() - s;
+                }),
+                read: await measureOperation(sizeValue, async () => {
+                    const s = performance.now();
+                    const accessHandle = await (fileHandle as any).createSyncAccessHandle();
+                    const size = accessHandle.getSize();
+                    const buffer = new DataView(new ArrayBuffer(size));
+                    accessHandle.read(buffer, { at: 0 });
+                    accessHandle.close();
+                    return performance.now() - s;
+                }),
+                update: await measureOperation(sizeValue, async () => {
+                    const s = performance.now();
+                    const accessHandle = await (fileHandle as any).createSyncAccessHandle();
+                    accessHandle.truncate(0); // clear existing
+                    accessHandle.write(modStrBuf);
+                    accessHandle.flush();
+                    accessHandle.close();
+                    return performance.now() - s;
+                }),
+                delete: await measureOperation(sizeValue, async () => {
+                    const s = performance.now();
+                    await root.removeEntry(fileName).catch(() => { });
+                    return performance.now() - s;
+                })
+            };
+        } catch (err) {
+            console.error('OPFS Sync Error:', err);
+            results['OPFS (Sync)'] = { insert: -1, read: -1, update: -1, delete: -1 };
         }
 
         self.postMessage({ type: 'done_native', sizeName, payload: results });

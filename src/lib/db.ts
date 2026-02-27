@@ -4,10 +4,13 @@ const DB_NAME = 'BenchmarkDB';
 const STORE_NAME = 'sessions';
 const VERSION = 1;
 
+import type { BenchmarkData, EnvironmentMetadata } from '../types';
+
 export interface BenchmarkSession {
     id: number; // timestamp
     timestamp: string;
-    data: any;
+    data: BenchmarkData;
+    env?: EnvironmentMetadata;
 }
 
 let dbPromise: Promise<IDBPDatabase<any>> | null = null;
@@ -25,14 +28,20 @@ function getDB() {
     return dbPromise;
 }
 
-export async function saveSession(data: any): Promise<number> {
+export async function saveSession(data: BenchmarkData): Promise<number> {
     const db = await getDB();
     const id = Date.now();
-    const session: BenchmarkSession = {
-        id,
-        timestamp: new Date().toLocaleString(),
-        data
+
+    const env: EnvironmentMetadata = {
+        userAgent: navigator.userAgent,
+        hardwareConcurrency: navigator.hardwareConcurrency || -1,
+        deviceMemory: (navigator as any).deviceMemory,
+        platform: navigator.platform || ''
     };
+
+    const ts = new Date().toLocaleString('en-US', { hour12: false });
+    const session: BenchmarkSession = { id, timestamp: ts, data, env };
+
     await db.put(STORE_NAME, session);
     return id;
 }

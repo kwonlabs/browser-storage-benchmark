@@ -6,6 +6,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Browser Storage Benchmark</title>
   <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;700&family=Outfit:wght@400;600;800&display=swap"
+    rel="stylesheet">
 </head>
 
 <body>
@@ -38,11 +43,11 @@
       </div>
 
       <div class="tech-guide">
-        <!-- Native Section -->
+        <!-- Low-Capacity Storage Section -->
         <section class="guide-group">
           <div class="group-header">
-            <h3>🌐 Native Web Storage</h3>
-            <p>Direct browser interfaces for localized data persistence.</p>
+            <h3>⚡ Low-Capacity Storage (&lt;10MB)</h3>
+            <p>Synchronous storage APIs best suited for lightweight data and configuration.</p>
           </div>
           <div class="guide-grid-large">
             <div class="guide-card">
@@ -69,6 +74,24 @@
               </div>
             </div>
             <div class="guide-card">
+              <div class="card-icon">🛠️</div>
+              <div class="card-body">
+                <h4>store.js</h4>
+                <p>A zero-dependency wrapper that picks the best storage (starts with LocalStorage) with a clean,
+                  unified API.</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- High-Capacity Storage Section -->
+        <section class="guide-group">
+          <div class="group-header">
+            <h3>🗄️ High-Capacity Storage (&gt;10MB)</h3>
+            <p>Asynchronous APIs designed for large datasets, binary payloads, and offline capabilities.</p>
+          </div>
+          <div class="guide-grid-large">
+            <div class="guide-card">
               <div class="card-icon">🛡️</div>
               <div class="card-body">
                 <h4>Cache API</h4>
@@ -87,27 +110,9 @@
             <div class="guide-card">
               <div class="card-icon">📂</div>
               <div class="card-body">
-                <h4>OPFS</h4>
+                <h4>OPFS (Async / Sync)</h4>
                 <p>Origin Private File System provides high-speed, direct file I/O within a sandboxed origin
-                  environment.</p>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <!-- Wrapper Section -->
-        <section class="guide-group">
-          <div class="group-header">
-            <h3>📦 Wrapper Libraries</h3>
-            <p>Abstractions that simplify complex storage APIs and ensure compatibility.</p>
-          </div>
-          <div class="guide-grid-large">
-            <div class="guide-card">
-              <div class="card-icon">🛠️</div>
-              <div class="card-body">
-                <h4>store.js</h4>
-                <p>A zero-dependency wrapper that picks the best storage (starts with LocalStorage) with a clean,
-                  unified API.</p>
+                  environment. Sync API available in workers.</p>
               </div>
             </div>
             <div class="guide-card">
@@ -227,8 +232,8 @@
                   <div class="row-label"><span>Targets</span></div>
                   <div class="row-content">
                     <div class="checkbox-list">
-                      <label><input type="checkbox" class="category-check" value="native" checked> Native</label>
-                      <label><input type="checkbox" class="category-check" value="wrapper" checked> Wrapper</label>
+                      <label><input type="checkbox" class="category-check" value="low" checked> Low-Capacity</label>
+                      <label><input type="checkbox" class="category-check" value="high" checked> High-Capacity</label>
                       <label><input type="checkbox" class="category-check" value="compression" checked>
                         Compression</label>
                     </div>
@@ -324,24 +329,24 @@
 
         <div class="report-grid">
           <div class="report-section">
-            <h3 class="section-title">🌐 Native Storage Performance Trends</h3>
+            <h3 class="section-title">⚡ Low-Capacity Storage Trends</h3>
             <div class="trend-layout">
               <div class="report-chart-item">
-                <canvas id="chart-trend-native-write"></canvas>
+                <canvas id="chart-trend-low-write"></canvas>
               </div>
               <div class="report-chart-item">
-                <canvas id="chart-trend-native-read"></canvas>
+                <canvas id="chart-trend-low-read"></canvas>
               </div>
             </div>
           </div>
           <div class="report-section">
-            <h3 class="section-title">📚 Library Performance Trends</h3>
+            <h3 class="section-title">🗄️ High-Capacity Storage Trends</h3>
             <div class="trend-layout">
               <div class="report-chart-item">
-                <canvas id="chart-trend-wrapper-write"></canvas>
+                <canvas id="chart-trend-high-write"></canvas>
               </div>
               <div class="report-chart-item">
-                <canvas id="chart-trend-wrapper-read"></canvas>
+                <canvas id="chart-trend-high-read"></canvas>
               </div>
             </div>
           </div>
