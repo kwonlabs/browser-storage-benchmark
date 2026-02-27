@@ -322,21 +322,22 @@ compressionWorker.onmessage = (e) => {
 
 // Event Listeners
 document.querySelectorAll('.tab-btn').forEach(btn => {
-  const target = (btn as HTMLElement).dataset.target!;
-  const pVal = target.replace('tab-', '');
+  btn.addEventListener('click', () => {
+    const target = (btn as HTMLElement).dataset.target!;
+    const pVal = target.replace('tab-', '');
 
-  // Update UI
-  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-  document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-  btn.classList.add('active');
-  document.getElementById(target)?.classList.add('active');
+    // Update UI
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById(target)?.classList.add('active');
 
-  // Update URL (p=home / p=report)
-  const url = new URL(window.location.href);
-  url.searchParams.set('p', pVal);
-  url.searchParams.delete('tab'); // Clean up old system
-  window.history.pushState({}, '', url.toString());
-});
+    // Update URL (p=home / p=report)
+    const url = new URL(window.location.href);
+    url.searchParams.set('p', pVal);
+    url.searchParams.delete('tab'); // Clean up old system
+    window.history.pushState({}, '', url.toString());
+  });
 });
 
 // Sync UI on browser back/forward
