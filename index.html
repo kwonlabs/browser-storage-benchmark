@@ -4,196 +4,119 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Comprehensive Storage Benchmark</title>
-  <style>
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-      padding: 2rem;
-      max-width: 900px;
-      margin: 0 auto;
-      background-color: #f9fafb;
-      color: #111827;
-    }
-
-    h1 {
-      font-size: 1.5rem;
-      margin-bottom: 1rem;
-    }
-
-    .card {
-      background-color: #fff;
-      border-radius: 8px;
-      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-      padding: 1.5rem;
-      margin-bottom: 1.5rem;
-    }
-
-    button {
-      background-color: #2563eb;
-      color: white;
-      border: none;
-      padding: 0.5rem 1rem;
-      border-radius: 4px;
-      font-weight: 500;
-      cursor: pointer;
-      transition: background-color 0.2s;
-      font-size: 1rem;
-    }
-
-    button:hover {
-      background-color: #1d4ed8;
-    }
-
-    button:disabled {
-      background-color: #93c5fd;
-      cursor: not-allowed;
-    }
-
-    /* Customizing <details> arrow */
-    details {
-      background-color: #1f2937;
-      border-radius: 6px;
-      padding: 0;
-      margin-top: 1rem;
-      overflow: hidden;
-    }
-
-    summary {
-      font-weight: 500;
-      cursor: pointer;
-      user-select: none;
-      padding: 0.8rem 1rem;
-      background-color: #374151;
-      color: #e5e7eb;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      list-style: none;
-      /* Hide default arrow in standard browsers */
-    }
-
-    /* Fallback to hide default arrow in webkit */
-    summary::-webkit-details-marker {
-      display: none;
-    }
-
-    summary::before {
-      content: '▶';
-      /* Default arrow right */
-      display: inline-block;
-      margin-right: 0.5rem;
-      transition: transform 0.2s;
-      font-size: 0.8rem;
-    }
-
-    details[open] summary::before {
-      transform: rotate(90deg);
-      /* Arrow down when open */
-    }
-
-    #logs {
-      font-family: monospace;
-      font-size: 0.9rem;
-      background-color: transparent;
-      color: #e5e7eb;
-      padding: 1rem;
-      white-space: pre-wrap;
-      height: 250px;
-      overflow-y: auto;
-      border-top: 1px solid #4b5563;
-    }
-
-    .chart-container {
-      position: relative;
-      height: 400px;
-      width: 100%;
-      margin-bottom: 2rem;
-    }
-  </style>
+  <title>Comprehensive Web Storage Benchmark</title>
 </head>
 
 <body>
-  <h1>Browser Storage Benchmark (Averaged)</h1>
-  <div class="card">
-    <p>This benchmark measures performance across pure Native Storage and Wrapper Storage targeting 3 distinct
-      operations:</p>
-    <ul>
-      <li><strong>Metadata / Text (1000 records)</strong>: LocalStorage (Main Thread) vs IndexedDB vs SQLite WASM</li>
-      <li><strong>Blob Storage (100x 512KB)</strong>: IndexedDB vs OPFS Native vs SQLite WASM</li>
-      <li><strong>Compression Ratio (100x 512KB)</strong>: Gzip, Deflate, ZIP, Brotli, Zstd applied to OPFS/IDB</li>
-    </ul>
-
-    <div style="display: flex; gap: 0.5rem; margin-top: 1rem; flex-wrap: wrap;">
-      <button id="btn-run-metadata" style="background-color: #f59e0b;">1. Run Metadata (Freezes UI)</button>
-      <button id="btn-run-blob" style="background-color: #3b82f6;">2. Run Blobs</button>
-      <button id="btn-run-compression" style="background-color: #8b5cf6;">3. Run Compression</button>
+  <header>
+    <div class="title-section">
+      <h1>Browser Storage Benchmark</h1>
+      <p>Analyze performance across Natives, Wrappers, and Compression algorithms.</p>
     </div>
-
-    <hr style="margin: 2rem 0; border: 1px solid #374151;">
-
-    <h3>Isolated Payload Benchmarks</h3>
-    <p>Measures write/read speed for identical, standalone blobs across Native vs Wrapped storage APIs.</p>
-    <div style="display: flex; gap: 0.5rem; margin-top: 1rem; flex-wrap: wrap;">
-      <button id="btn-run-payload-1kb" style="background-color: #10b981;">Test 1KB (Low)</button>
-      <button id="btn-run-payload-1mb" style="background-color: #10b981;">Test 1MB (Medium)</button>
-      <button id="btn-run-payload-100mb" style="background-color: #10b981;">Test 100MB (High)</button>
+    <div class="controls">
+      <button id="btn-export" class="btn-success">Export JSON</button>
+      <button id="btn-import" class="btn-secondary">Import JSON</button>
+      <input type="file" id="input-import" accept=".json" style="display: none;" />
     </div>
+  </header>
 
-    <hr style="margin: 2rem 0; border: 1px solid #374151;">
+  <nav class="tabs">
+    <button class="tab-btn active" data-target="tab-home">🏠 Home & Guide</button>
+    <button class="tab-btn" data-target="tab-report">📊 Performance Report</button>
+  </nav>
 
-    <details open>
-      <summary>
-        <div>Worker Logs & State</div>
-        <button id="copy-logs-btn"
-          style="padding: 0.3rem 0.6rem; font-size: 0.8rem; background-color: #4b5563; border-radius: 4px;"
-          onclick="event.preventDefault();">Copy Logs</button>
-        <button id="export-json-btn"
-          style="padding: 0.3rem 0.6rem; font-size: 0.8rem; background-color: #2563eb; border-radius: 4px;"
-          onclick="event.preventDefault();">Export JSON</button>
-        <button id="import-json-btn"
-          style="padding: 0.3rem 0.6rem; font-size: 0.8rem; background-color: #059669; border-radius: 4px;"
-          onclick="event.preventDefault();">Import JSON</button>
-        <input type="file" id="import-json-input" accept=".json" style="display: none;" />
-      </summary>
-      <div id="logs">Waiting for commands...</div>
-    </details>
-  </div>
+  <main>
+    <!-- TAB: HOME & GUIDE -->
+    <section id="tab-home" class="tab-content active">
+      <div class="hero-section">
+        <h2>Browser Storage & Compression Analyzer</h2>
+        <p>현대 웹 브라우저의 저장 및 압축 기술을 한눈에 비교하고 분석하세요.</p>
+        <div class="hero-actions">
+          <button id="btn-run-all" class="btn-primary-large">🚀 Run Standard Benchmarks (128B - 10MB)</button>
+          <button id="btn-toggle-advanced" class="btn-secondary">⚙️ Advanced Settings</button>
+        </div>
 
-  <div class="card">
-    <div class="chart-container">
-      <canvas id="metadata-chart"></canvas>
-    </div>
-  </div>
+        <div id="advanced-controller" class="advanced-panel" style="display: none;">
+          <div class="action-section">
+            <h3>Benchmark Matrix Controller</h3>
+            <p style="margin-bottom: 1.5rem; font-size: 0.9rem; color: var(--text-muted);">커스텀 테스트 시나리오를 구성하세요. (100MB
+              이상은 시간이 소요됩니다)</p>
 
-  <div class="card">
-    <div class="chart-container">
-      <canvas id="blob-chart"></canvas>
-    </div>
-  </div>
+            <div class="runner-config">
+              <div class="config-group">
+                <div class="config-header">
+                  <span class="config-label">1. Categories</span>
+                  <div class="selection-tools">
+                    <button class="btn-text" id="cat-all">All</button>
+                    <button class="btn-text" id="cat-none">None</button>
+                  </div>
+                </div>
+                <div class="checkbox-group">
+                  <label><input type="checkbox" class="category-check" value="native" checked> Native</label>
+                  <label><input type="checkbox" class="category-check" value="wrapper" checked> Library</label>
+                  <label><input type="checkbox" class="category-check" value="compression" checked> Compression</label>
+                </div>
+              </div>
 
-  <div class="card">
-    <div class="chart-container" style="height: 450px;">
-      <canvas id="compression-idb-chart"></canvas>
-    </div>
-  </div>
+              <div class="config-group" style="flex: 1; min-width: 300px;">
+                <div class="config-header">
+                  <span class="config-label">2. Sizes</span>
+                  <div class="selection-tools">
+                    <button class="btn-text" id="size-all">All</button>
+                    <button class="btn-text" id="size-none">None</button>
+                  </div>
+                </div>
+                <div class="checkbox-group size-selectors">
+                  <label><input type="checkbox" class="size-check" value="128b" checked> 128B</label>
+                  <label><input type="checkbox" class="size-check" value="1kb" checked> 1KB</label>
+                  <label><input type="checkbox" class="size-check" value="10kb" checked> 10KB</label>
+                  <label><input type="checkbox" class="size-check" value="100kb" checked> 100KB</label>
+                  <label><input type="checkbox" class="size-check" value="1mb" checked> 1MB</label>
+                  <label><input type="checkbox" class="size-check" value="10mb" checked> 10MB</label>
+                  <label><input type="checkbox" class="size-check" value="100mb"> 100MB</label>
+                  <label><input type="checkbox" class="size-check" value="1gb"> 1GB</label>
+                </div>
+              </div>
 
-  <div class="card">
-    <div class="chart-container" style="height: 450px;">
-      <canvas id="compression-opfs-chart"></canvas>
-    </div>
-  </div>
+              <div class="config-group">
+                <button id="btn-run-custom" class="btn-primary" style="padding: 0.75rem 2rem; font-size: 1rem;">▶️
+                  Execute Selected</button>
+              </div>
+            </div>
+          </div>
+        </div>
 
-  <h2>Payload Size Comparison</h2>
-  <div class="card">
-    <div class="chart-container">
-      <canvas id="native-size-chart"></canvas>
-    </div>
-  </div>
-  <div class="card">
-    <div class="chart-container">
-      <canvas id="wrapper-size-chart"></canvas>
-    </div>
-  </div>
+        <div id="overall-progress" class="overall-progress" style="display: none;">
+          <div class="progress-info">
+            <span id="progress-text">Initializing...</span>
+            <span id="progress-percent">0%</span>
+          </div>
+          <div class="progress-bar-bg">
+            <div id="progress-bar-fill" class="progress-bar-fill"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="dashboard-item">
+        <h4>Wrapper Library Results</h4>
+        <div class="chart-container-small"><canvas id="chart-dashboard-wrapper"></canvas></div>
+      </div>
+      <div class="dashboard-item">
+        <h4>Compression Results</h4>
+        <div class="chart-container-small"><canvas id="chart-dashboard-compression"></canvas></div>
+      </div>
+      </div>
+    </section>
+
+    <section class="logs-container">
+      <div class="logs-header">
+        <span>Terminal Logs</span>
+        <button id="btn-copy-logs" class="btn-secondary" style="padding: 0.25rem 0.5rem; font-size: 0.8rem;">Copy
+          Logs</button>
+      </div>
+      <div id="logs">Ready...</div>
+    </section>
+  </main>
 
   <script type="module" src="/src/main.ts"></script>
 </body>

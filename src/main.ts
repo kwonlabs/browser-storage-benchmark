@@ -1,489 +1,613 @@
 import './style.css';
 import Chart from 'chart.js/auto';
 
-const btnRunMetadata = document.getElementById('btn-run-metadata') as HTMLButtonElement;
-const btnRunBlob = document.getElementById('btn-run-blob') as HTMLButtonElement;
-const btnRunCompression = document.getElementById('btn-run-compression') as HTMLButtonElement;
-const btnRun1kb = document.getElementById('btn-run-payload-1kb') as HTMLButtonElement;
-const btnRun1mb = document.getElementById('btn-run-payload-1mb') as HTMLButtonElement;
-const btnRun100mb = document.getElementById('btn-run-payload-100mb') as HTMLButtonElement;
+// ===== UI Elements =====
 const logsEl = document.getElementById('logs') as HTMLDivElement;
-const metadataChartCtx = document.getElementById('metadata-chart') as HTMLCanvasElement;
-const blobChartCtx = document.getElementById('blob-chart') as HTMLCanvasElement;
-const compressionIdbChartCtx = document.getElementById('compression-idb-chart') as HTMLCanvasElement;
-const compressionOpfsChartCtx = document.getElementById('compression-opfs-chart') as HTMLCanvasElement;
-const exportJsonBtn = document.getElementById('export-json-btn') as HTMLButtonElement;
-const importJsonBtn = document.getElementById('import-json-btn') as HTMLButtonElement;
-const importJsonInput = document.getElementById('import-json-input') as HTMLInputElement;
+const btnExport = document.getElementById('btn-export') as HTMLButtonElement;
+const btnImport = document.getElementById('btn-import') as HTMLButtonElement;
+const inputImport = document.getElementById('input-import') as HTMLInputElement;
+const btnCopyLogs = document.getElementById('btn-copy-logs') as HTMLButtonElement;
 
-const worker = new Worker(new URL('./worker.ts', import.meta.url), { type: 'module' });
+const nativeBtns = document.getElementById('native-buttons')?.querySelectorAll('button') || [] as unknown as NodeListOf<HTMLButtonElement>;
+const wrapperBtns = document.getElementById('wrapper-buttons')?.querySelectorAll('button') || [] as unknown as NodeListOf<HTMLButtonElement>;
+const compressionBtns = document.getElementById('compression-buttons')?.querySelectorAll('button') || [] as unknown as NodeListOf<HTMLButtonElement>;
 
-let myChartMetadata: Chart;
-let myChartBlob: Chart;
-let myChartCompressionIdb: Chart;
-let myChartCompressionOpfs: Chart;
+const btnRunCustom = document.getElementById('btn-run-custom') as HTMLButtonElement;
+const categoryChecks = document.querySelectorAll('.category-check') as NodeListOf<HTMLInputElement>;
+const sizeChecks = document.querySelectorAll('.size-check') as NodeListOf<HTMLInputElement>;
 
-let myChartNativeSize: Chart;
-let myChartWrapperSize: Chart;
+const chartNativeCtx = document.getElementById('chart-native') as HTMLCanvasElement;
+const chartWrapperCtx = document.getElementById('chart-wrapper') as HTMLCanvasElement;
+const chartCompressionCtx = document.getElementById('chart-compression') as HTMLCanvasElement;
 
-let latestData: any = {
-  metadata: { localStorage: {}, idb: {}, sqlite: {} },
-  blob: { sqlite: {}, opfs: {}, idb: {} },
-  compressionIdb: { none: {}, zip: {}, gzip: {}, deflate: {}, brotli: {}, zstd: {} },
-  compressionOpfs: { none: {}, zip: {}, gzip: {}, deflate: {}, brotli: {}, zstd: {} },
-  payload: {
-    native: { '1kb': {}, '1mb': {}, '100mb': {} },
-    wrapper: { '1kb': {}, '1mb': {}, '100mb': {} }
-  }
+const chartHomeNativeCtx = document.getElementById('chart-dashboard-native') as HTMLCanvasElement;
+const chartHomeWrapperCtx = document.getElementById('chart-dashboard-wrapper') as HTMLCanvasElement;
+const chartHomeCompressionCtx = document.getElementById('chart-dashboard-compression') as HTMLCanvasElement;
+
+const chartReportNativeCtx = document.getElementById('chart-dashboard-native-v2') as HTMLCanvasElement;
+const chartReportWrapperCtx = document.getElementById('chart-dashboard-wrapper-v2') as HTMLCanvasElement;
+const chartReportCompressionCtx = document.getElementById('chart-dashboard-compression-v2') as HTMLCanvasElement;
+
+const btnCatAll = document.getElementById('cat-all') as HTMLButtonElement;
+const btnCatNone = document.getElementById('cat-none') as HTMLButtonElement;
+const btnSizeAll = document.getElementById('size-all') as HTMLButtonElement;
+const btnSizeNone = document.getElementById('size-none') as HTMLButtonElement;
+
+const btnRunAll = document.getElementById('btn-run-all') as HTMLButtonElement;
+const progressArea = document.getElementById('overall-progress') as HTMLDivElement;
+const progressBar = document.getElementById('progress-bar-fill') as HTMLDivElement;
+const progressText = document.getElementById('progress-text') as HTMLSpanElement;
+const progressPercent = document.getElementById('progress-percent') as HTMLSpanElement;
+
+// ===== State Management =====
+export interface BenchmarkState {
+  native: Record<string, Record<string, { insert: number, read: number, update: number, delete: number }>>;
+  wrapper: Record<string, Record<string, { insert: number, read: number, update: number, delete: number }>>;
+  compression: Record<string, Record<string, { compressTime: number, decompressTime: number, ratio: number, compSize?: number }>>;
+}
+
+let latestData: BenchmarkState = {
+  native: {},
+  wrapper: {},
+  compression: {}
 };
 
-function appendLog(msg: string) {
-  logsEl.innerHTML += `<div>[${new Date().toLocaleTimeString()}] ${msg}</div>`;
+export const SIZES = ['128b', '1kb', '10kb', '100kb', '1mb', '10mb', '100mb', '1gb'];
+const SIZE_BYTES: Record<string, number> = {
+  '128b': 128, '1kb': 1024, '10kb': 10240, '100kb': 102400,
+  '1mb': 1024 * 1024, '10mb': 10 * 1024 * 1024, '100mb': 100 * 1024 * 1024, '1gb': 1024 * 1024 * 1024
+};
+
+// Colors matching the UI theme
+const colors = [
+  'rgba(59, 130, 246, 0.7)', // Blue
+  'rgba(16, 185, 129, 0.7)', // Emerald
+  'rgba(139, 92, 246, 0.7)', // Violet
+  'rgba(245, 158, 11, 0.7)', // Amber
+  'rgba(239, 68, 68, 0.7)',  // Red
+  'rgba(14, 165, 233, 0.7)'  // Sky
+];
+
+// ===== Web Worker =====
+const worker = new Worker(new URL('./worker.ts', import.meta.url), { type: 'module' });
+
+// ===== Chart Instances =====
+let chartNative: Chart;
+let chartWrapper: Chart;
+let chartCompression: Chart;
+
+let chartDashNative: Chart;
+let chartDashWrapper: Chart;
+let chartDashCompression: Chart;
+
+let chartReportNative: Chart;
+let chartReportWrapper: Chart;
+let chartReportCompression: Chart;
+
+function initCharts() {
+  const commonOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    color: '#94a3b8',
+    scales: {
+      y: { type: 'logarithmic' as const, title: { display: true, text: 'Time (ms) - Log Scale', color: '#94a3b8' }, grid: { color: '#334155' }, ticks: { color: '#94a3b8' } },
+      x: { grid: { color: '#334155' }, ticks: { color: '#94a3b8' } }
+    },
+    plugins: {
+      legend: { labels: { color: '#f8fafc' } }
+    }
+  } as const;
+
+  // Custom plugin to show "N/A" for skipped tests (value = -1)
+  const skipPlugin = {
+    id: 'skipPlugin',
+    afterDatasetsDraw(chart: any) {
+      const { ctx, data } = chart;
+      data.datasets.forEach((dataset: any, datasetIndex: number) => {
+        const meta = chart.getDatasetMeta(datasetIndex);
+        meta.data.forEach((bar: any, index: number) => {
+          const val = dataset.data[index];
+          if (val === -1) {
+            ctx.save();
+            ctx.fillStyle = '#ef4444'; // Red for N/A
+            ctx.font = 'bold 9px sans-serif';
+            ctx.textAlign = 'center';
+            // Draw N/A at the bottom of the chart area for this X position
+            ctx.fillText('N/A', bar.x, chart.chartArea.bottom - 5);
+            ctx.restore();
+          }
+        });
+      });
+    }
+  };
+
+  chartNative = new Chart(chartNativeCtx, {
+    type: 'bar',
+    plugins: [skipPlugin],
+    data: { labels: [], datasets: [] },
+    options: { ...commonOptions, plugins: { ...commonOptions.plugins, title: { display: true, text: 'Native Storage (CRUD Time)', color: '#f8fafc' } } }
+  });
+
+  chartWrapper = new Chart(chartWrapperCtx, {
+    type: 'bar',
+    plugins: [skipPlugin],
+    data: { labels: [], datasets: [] },
+    options: { ...commonOptions, plugins: { ...commonOptions.plugins, title: { display: true, text: 'Wrapper Libraries (CRUD Time)', color: '#f8fafc' } } }
+  });
+
+  const compOptions = {
+    responsive: true, maintainAspectRatio: false, color: '#94a3b8',
+    scales: {
+      yTime: { type: 'logarithmic' as const, position: 'left' as const, title: { display: true, text: 'Time (ms) - Log Scale', color: '#94a3b8' }, grid: { color: '#334155' }, ticks: { color: '#94a3b8' } },
+      yRatio: { type: 'linear' as const, position: 'right' as const, title: { display: true, text: 'Compression Ratio (x)', color: '#a78bfa' }, grid: { drawOnChartArea: false }, ticks: { color: '#a78bfa' } },
+      x: { grid: { color: '#334155' }, ticks: { color: '#94a3b8' } }
+    },
+    plugins: {
+      legend: { labels: { color: '#f8fafc' } },
+      title: { display: true, text: 'Compression Performance (Speed vs Ratio)', color: '#f8fafc' }
+    }
+  } as const;
+
+  chartCompression = new Chart(chartCompressionCtx, {
+    type: 'bar',
+    data: { labels: ['None', 'ZIP', 'Gzip', 'Deflate', 'Brotli', 'zstd'], datasets: [] },
+    options: compOptions
+  });
+
+  // Home Summary Charts
+  chartDashNative = new Chart(chartHomeNativeCtx, {
+    type: 'bar', plugins: [skipPlugin], data: { labels: [], datasets: [] },
+    options: { ...commonOptions, plugins: { ...commonOptions.plugins, title: { display: false } } }
+  });
+  chartDashWrapper = new Chart(chartHomeWrapperCtx, {
+    type: 'bar', plugins: [skipPlugin], data: { labels: [], datasets: [] },
+    options: { ...commonOptions, plugins: { ...commonOptions.plugins, title: { display: false } } }
+  });
+  chartDashCompression = new Chart(chartHomeCompressionCtx, {
+    type: 'bar',
+    data: { labels: ['None', 'ZIP', 'Gzip', 'Deflate', 'Brotli', 'zstd'], datasets: [] },
+    options: { ...compOptions, plugins: { ...compOptions.plugins, title: { display: false } } }
+  });
+
+  // Report Full Overview Charts
+  chartReportNative = new Chart(chartReportNativeCtx, {
+    type: 'bar', plugins: [skipPlugin], data: { labels: [], datasets: [] },
+    options: { ...commonOptions, plugins: { ...commonOptions.plugins, title: { display: false } } }
+  });
+  chartReportWrapper = new Chart(chartReportWrapperCtx, {
+    type: 'bar', plugins: [skipPlugin], data: { labels: [], datasets: [] },
+    options: { ...commonOptions, plugins: { ...commonOptions.plugins, title: { display: false } } }
+  });
+  chartReportCompression = new Chart(chartReportCompressionCtx, {
+    type: 'bar',
+    data: { labels: ['None', 'ZIP', 'Gzip', 'Deflate', 'Brotli', 'zstd'], datasets: [] },
+    options: { ...compOptions, plugins: { ...compOptions.plugins, title: { display: false } } }
+  });
+}
+
+const mapVal = (v: any) => {
+  if (v === -1) return -1;
+  if (v === undefined || v === null) return 0;
+  return Math.max(v, 0.001);
+};
+
+function updateNativeChart(sizeName: string) {
+  const data = latestData.native[sizeName];
+  if (!data) return;
+  const labels = ['Cookies', 'SessionStorage', 'LocalStorage', 'CacheAPI', 'IndexedDB', 'OPFS'];
+
+  // Datasets for Insert, Read, Update, Delete
+  chartNative.data.labels = labels;
+  chartNative.data.datasets = [
+    { label: 'Insert', backgroundColor: colors[0], minBarLength: 3, data: labels.map(l => mapVal(data[l]?.insert)) },
+    { label: 'Read', backgroundColor: colors[1], minBarLength: 3, data: labels.map(l => mapVal(data[l]?.read)) },
+    { label: 'Update', backgroundColor: colors[2], minBarLength: 3, data: labels.map(l => mapVal(data[l]?.update)) },
+    { label: 'Delete', backgroundColor: colors[3], minBarLength: 3, data: labels.map(l => mapVal(data[l]?.delete)) }
+  ];
+  chartNative.options.plugins!.title!.text = `Native Storage (${sizeName.toUpperCase()})`;
+  chartNative.update();
+
+  chartDashNative.data.labels = labels;
+  chartDashNative.data.datasets = chartNative.data.datasets;
+  chartDashNative.update();
+
+  chartReportNative.data.labels = labels;
+  chartReportNative.data.datasets = chartNative.data.datasets;
+  chartReportNative.update();
+}
+
+function updateWrapperChart(sizeName: string) {
+  const data = latestData.wrapper[sizeName];
+  if (!data) return;
+  const labels = ['store.js', 'SQLite', 'localForage', 'Dexie', 'PouchDB'];
+
+  chartWrapper.data.labels = labels;
+  chartWrapper.data.datasets = [
+    { label: 'Insert', backgroundColor: colors[0], minBarLength: 3, data: labels.map(l => mapVal(data[l]?.insert)) },
+    { label: 'Read', backgroundColor: colors[1], minBarLength: 3, data: labels.map(l => mapVal(data[l]?.read)) },
+    { label: 'Update', backgroundColor: colors[2], minBarLength: 3, data: labels.map(l => mapVal(data[l]?.update)) },
+    { label: 'Delete', backgroundColor: colors[3], minBarLength: 3, data: labels.map(l => mapVal(data[l]?.delete)) }
+  ];
+  chartWrapper.options.plugins!.title!.text = `Wrapper Libraries (${sizeName.toUpperCase()})`;
+  chartWrapper.update();
+
+  chartDashWrapper.data.labels = labels;
+  chartDashWrapper.data.datasets = chartWrapper.data.datasets;
+  chartDashWrapper.update();
+
+  chartReportWrapper.data.labels = labels;
+  chartReportWrapper.data.datasets = chartWrapper.data.datasets;
+  chartReportWrapper.update();
+}
+
+function updateCompressionChart(sizeName: string) {
+  const data = latestData.compression[sizeName];
+  if (!data) return;
+  const labels = ['None', 'ZIP', 'Gzip', 'Deflate', 'Brotli', 'zstd'];
+
+  chartCompression.data.labels = labels;
+  chartCompression.data.datasets = [
+    {
+      label: 'Compress Time (ms)',
+      type: 'bar',
+      yAxisID: 'yTime',
+      backgroundColor: colors[0],
+      data: labels.map(l => data[l]?.compressTime || 0)
+    },
+    {
+      label: 'Decompress Time (ms)',
+      type: 'bar',
+      yAxisID: 'yTime',
+      backgroundColor: colors[1],
+      data: labels.map(l => data[l]?.decompressTime || 0)
+    },
+    {
+      label: 'Compression Ratio (x)',
+      type: 'line',
+      yAxisID: 'yRatio',
+      borderColor: colors[2],
+      backgroundColor: colors[2],
+      borderWidth: 2,
+      data: labels.map(l => data[l]?.ratio || 1)
+    }
+  ];
+  chartCompression.options.plugins!.title!.text = `Compression Bench (${sizeName.toUpperCase()})`;
+  chartCompression.update();
+
+  chartDashCompression.data.labels = labels;
+  chartDashCompression.data.datasets = chartCompression.data.datasets;
+  chartDashCompression.update();
+
+  chartReportCompression.data.labels = labels;
+  chartReportCompression.data.datasets = chartCompression.data.datasets;
+  chartReportCompression.update();
+}
+
+function renderAllCharts(sizeFallback: string = '1kb') {
+  // Finds the most recently heavily populated size, or defaults
+  const availNative = Object.keys(latestData.native).pop() || sizeFallback;
+  const availWrapper = Object.keys(latestData.wrapper).pop() || sizeFallback;
+  const availComp = Object.keys(latestData.compression).pop() || sizeFallback;
+
+  if (latestData.native[availNative]) updateNativeChart(availNative);
+  if (latestData.wrapper[availWrapper]) updateWrapperChart(availWrapper);
+  if (latestData.compression[availComp]) updateCompressionChart(availComp);
+}
+
+// ===== Utility =====
+function appendLog(msg: string, type: 'info' | 'error' | 'success' | 'warn' = 'info') {
+  const colorClass = type === 'info' ? '' : `log-${type}`;
+  logsEl.innerHTML += `<div class="${colorClass}">[${new Date().toLocaleTimeString()}] ${msg}</div>`;
   logsEl.scrollTop = logsEl.scrollHeight;
 }
 
-const copyLogsBtn = document.getElementById('copy-logs-btn') as HTMLButtonElement;
+function disableButtons(NodeList: NodeListOf<HTMLButtonElement>, disable: boolean) {
+  NodeList.forEach(btn => btn.disabled = disable);
+}
 
-copyLogsBtn.addEventListener('click', async () => {
-  await navigator.clipboard.writeText(logsEl.innerText);
-  alert('Logs copied to clipboard!');
-});
+// ===== Main Thread Engines (Native Web Storage) =====
+// Generates a string of a given byte size (approximate for English chars)
+function generateDataString(sizeBytes: number) {
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789 ';
+  const pattern = "BenchmarkData_Repeated_Pattern_";
+  let res = '';
+  const chunkSize = 10000;
+  for (let i = 0; i < sizeBytes; i += chunkSize) {
+    const lim = Math.min(chunkSize, sizeBytes - i);
+    let chunk = '';
+    for (let j = 0; j < lim; j++) {
+      if ((i + j) % 50 < 40) { // 80% repetition of a pattern
+        chunk += pattern.charAt((i + j) % pattern.length);
+      } else {
+        chunk += chars.charAt(Math.floor(Math.random() * chars.length));
+      }
+    }
+    res += chunk;
+  }
+  return res;
+}
 
-exportJsonBtn.addEventListener('click', () => {
-  if (!latestData) {
-    alert('No benchmark data available to export. Run the benchmark first!');
+async function runAveragedMain(name: string, fn: () => void | Promise<void>) {
+  for (let i = 0; i < 1; i++) await fn(); // 1 Warmup
+  let total = 0;
+  for (let i = 0; i < 3; i++) { // 3 Runs
+    const s = performance.now();
+    await fn();
+    total += (performance.now() - s);
+  }
+  const avg = total / 3;
+  appendLog(`  Main: ${name} -> ${avg.toFixed(2)}ms`, 'info');
+  return avg;
+}
+
+async function runMainThreadNative(sizeName: string, sizeBytes: number) {
+  const results: Record<string, { insert: number, read: number, update: number, delete: number }> = {};
+
+  // Limits: Cookies max ~4KB. LS/SS max ~5MB.
+  const canRunCookie = sizeBytes <= 4000;
+  const canRunWebStorage = sizeBytes <= 4.5 * 1024 * 1024; // 4.5MB safe limit
+
+  appendLog(`Generating ${sizeName} payload for Main Thread...`, 'warn');
+  await new Promise(r => setTimeout(r, 50)); // Paint
+
+  let payloadStr: string;
+  try {
+    payloadStr = canRunWebStorage ? generateDataString(sizeBytes) : '';
+  } catch (e) {
+    appendLog('OOM during string generation, skipping main thread.', 'error');
+    return results;
+  }
+
+  // Session Storage
+  if (canRunWebStorage) {
+    try {
+      const ssRes = { insert: 0, read: 0, update: 0, delete: 0 };
+      sessionStorage.clear();
+      ssRes.insert = await runAveragedMain('SS Insert', () => { sessionStorage.setItem('b', payloadStr); });
+      ssRes.read = await runAveragedMain('SS Read', () => { sessionStorage.getItem('b'); });
+      ssRes.update = await runAveragedMain('SS Update', () => { sessionStorage.setItem('b', payloadStr.substring(0, payloadStr.length - 1) + 'a'); });
+      ssRes.delete = await runAveragedMain('SS Delete', () => { sessionStorage.removeItem('b'); });
+      results['SessionStorage'] = ssRes;
+    } catch (e: any) { appendLog(`SS Error: ${e.message}`, 'error'); }
+  } else {
+    results['SessionStorage'] = { insert: -1, read: -1, update: -1, delete: -1 };
+    appendLog(`SS skipped for ${sizeName} (Quota)`, 'warn');
+  }
+
+  // Local Storage
+  if (canRunWebStorage) {
+    try {
+      const lsRes = { insert: 0, read: 0, update: 0, delete: 0 };
+      localStorage.clear();
+      lsRes.insert = await runAveragedMain('LS Insert', () => { localStorage.setItem('b', payloadStr); });
+      lsRes.read = await runAveragedMain('LS Read', () => { localStorage.getItem('b'); });
+      lsRes.update = await runAveragedMain('LS Update', () => { localStorage.setItem('b', payloadStr.substring(0, payloadStr.length - 1) + 'a'); });
+      lsRes.delete = await runAveragedMain('LS Delete', () => { localStorage.removeItem('b'); });
+      results['LocalStorage'] = lsRes;
+    } catch (e: any) { appendLog(`LS Error: ${e.message}`, 'error'); }
+  } else {
+    results['LocalStorage'] = { insert: -1, read: -1, update: -1, delete: -1 };
+    appendLog(`LS skipped for ${sizeName} (Quota)`, 'warn');
+  }
+
+  // Cookies
+  if (canRunCookie) {
+    try {
+      const cRes = { insert: 0, read: 0, update: 0, delete: 0 };
+      document.cookie = "b=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+      cRes.insert = await runAveragedMain('Cookie Insert', () => { document.cookie = `b=${payloadStr}; path=/`; });
+      cRes.read = await runAveragedMain('Cookie Read', () => { document.cookie.length; });
+      cRes.update = await runAveragedMain('Cookie Update', () => { document.cookie = `b=${payloadStr.substring(0, payloadStr.length - 1)}a; path=/`; });
+      cRes.delete = await runAveragedMain('Cookie Delete', () => { document.cookie = "b=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;"; });
+      results['Cookies'] = cRes;
+    } catch (e: any) { appendLog(`Cookie Error: ${e.message}`, 'error'); }
+  } else {
+    results['Cookies'] = { insert: -1, read: -1, update: -1, delete: -1 };
+    appendLog(`Cookies skipped for ${sizeName} (Quota)`, 'warn');
+  }
+
+  return results;
+}
+
+// ===== Automated Suite Runner =====
+// ===== Automated Suite Runner =====
+let testQueue: { type: 'native' | 'wrapper' | 'compression', sizeName: string }[] = [];
+let isRunningAll = false;
+let queueTotal = 0;
+
+async function runNextInQueue() {
+  if (testQueue.length === 0) {
+    isRunningAll = false;
+    appendLog("--- ALL BENCHMARKS COMPLETED ---", "success");
+    progressText.innerText = "All Tests Completed!";
+    progressBar.style.width = "100%";
+    progressPercent.innerText = "100%";
+    btnRunAll.disabled = false;
+    btnRunAll.innerText = "🚀 Run All Benchmarks (128B - 1GB)";
+    if (btnRunCustom) btnRunCustom.disabled = false;
     return;
   }
+
+  const task = testQueue.shift()!;
+  const sizeBytes = SIZE_BYTES[task.sizeName];
+
+  // Update Progress
+  const current = queueTotal - testQueue.length;
+  const percent = Math.round((current / queueTotal) * 100);
+  progressBar.style.width = `${percent}%`;
+  progressPercent.innerText = `${percent}%`;
+  progressText.innerText = `Running ${task.type.toUpperCase()} - ${task.sizeName.toUpperCase()}... (${current}/${queueTotal})`;
+
+  if (task.type === 'native') {
+    const mainResults = await runMainThreadNative(task.sizeName, sizeBytes);
+    if (!latestData.native[task.sizeName]) latestData.native[task.sizeName] = {};
+    Object.assign(latestData.native[task.sizeName], mainResults);
+    updateNativeChart(task.sizeName);
+    worker.postMessage({ type: 'start_native', sizeName: task.sizeName, sizeBytes });
+  } else if (task.type === 'wrapper') {
+    const mainResults = await runWrapperMain(task.sizeName, sizeBytes);
+    Object.assign(latestData.wrapper[task.sizeName], mainResults);
+    updateWrapperChart(task.sizeName);
+    worker.postMessage({ type: 'start_wrapper', sizeName: task.sizeName, sizeBytes });
+  } else if (task.type === 'compression') {
+    worker.postMessage({ type: 'start_compression', sizeName: task.sizeName, sizeBytes });
+  }
+}
+
+async function runWrapperMain(sizeName: string, sizeBytes: number) {
+  const canRunWebStorage = sizeBytes <= 4.5 * 1024 * 1024;
+  const wrapperRes: any = {};
+  // @ts-ignore
+  const store = (await import('store2')).default;
+  if (canRunWebStorage) {
+    const payloadStr = generateDataString(sizeBytes);
+    try {
+      store.clearAll();
+      wrapperRes['store.js'] = {
+        insert: await runAveragedMain('store.js Insert', () => { store.set('b', payloadStr); }),
+        read: await runAveragedMain('store.js Read', () => { store.get('b'); }),
+        update: await runAveragedMain('store.js Update', () => { store.set('b', payloadStr.substring(0, payloadStr.length - 1) + 'a'); }),
+        delete: await runAveragedMain('store.js Delete', () => { store.remove('b'); })
+      };
+    } catch (e: any) { appendLog(`store.js Error: ${e.message}`, 'error'); }
+  } else {
+    wrapperRes['store.js'] = { insert: -1, read: -1, update: -1, delete: -1 };
+  }
+  if (!latestData.wrapper[sizeName]) latestData.wrapper[sizeName] = {};
+  return wrapperRes;
+}
+
+btnRunAll.addEventListener('click', () => {
+  if (isRunningAll) return;
+  isRunningAll = true;
+  btnRunAll.disabled = true;
+  btnRunAll.innerText = "Running...";
+  progressArea.style.display = 'block';
+
+  testQueue = [];
+  for (const s of SIZES) {
+    testQueue.push({ type: 'native', sizeName: s });
+    testQueue.push({ type: 'wrapper', sizeName: s });
+    testQueue.push({ type: 'compression', sizeName: s });
+  }
+
+  appendLog("--- STARTING ALL BENCHMARKS ---", "warn");
+  queueTotal = testQueue.length;
+  runNextInQueue();
+});
+
+// ===== Event Listeners =====
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', (e) => {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+    const target = (e.target as HTMLElement).getAttribute('data-target')!;
+    (e.target as HTMLElement).classList.add('active');
+    document.getElementById(target)!.classList.add('active');
+  });
+});
+
+// ===== Selection Tools =====
+btnCatAll.addEventListener('click', () => categoryChecks.forEach(c => c.checked = true));
+btnCatNone.addEventListener('click', () => categoryChecks.forEach(c => c.checked = false));
+btnSizeAll.addEventListener('click', () => sizeChecks.forEach(c => c.checked = true));
+btnSizeNone.addEventListener('click', () => sizeChecks.forEach(c => c.checked = false));
+
+btnRunCustom.addEventListener('click', () => {
+  if (isRunningAll) return;
+  const selectedCategories = Array.from(categoryChecks).filter(c => c.checked).map(c => c.value);
+  const selectedSizes = Array.from(sizeChecks).filter(c => c.checked).map(c => c.value);
+
+  if (selectedCategories.length === 0 || selectedSizes.length === 0) {
+    alert("Please select at least one category and one size to run.");
+    return;
+  }
+
+  isRunningAll = true;
+  btnRunCustom.disabled = true;
+  progressArea.style.display = 'block';
+
+  testQueue = [];
+  // Matrix execution: for each size, run all selected categories
+  for (const sizeName of selectedSizes) {
+    for (const cat of selectedCategories) {
+      testQueue.push({ type: cat as any, sizeName });
+    }
+  }
+
+  appendLog(`--- STARTING CUSTOM BENCHMARK MATRIX (${selectedSizes.join(', ').toUpperCase()}) ---`, "warn");
+  queueTotal = testQueue.length;
+  runNextInQueue();
+});
+
+// ===== Export / Import =====
+btnExport.addEventListener('click', () => {
   const blob = new Blob([JSON.stringify(latestData, null, 2)], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = `benchmark-${new Date().getTime()}.json`;
+  a.download = `storage-benchmark-${new Date().getTime()}.json`;
   a.click();
   URL.revokeObjectURL(url);
+  appendLog('Benchmark data exported successfully.', 'success');
 });
 
-importJsonBtn.addEventListener('click', () => {
-  importJsonInput.click();
-});
+btnImport.addEventListener('click', () => inputImport.click());
 
-importJsonInput.addEventListener('change', (e) => {
+inputImport.addEventListener('change', (e) => {
   const file = (e.target as HTMLInputElement).files?.[0];
   if (!file) return;
   const reader = new FileReader();
   reader.onload = (evt) => {
     try {
-      const data = JSON.parse(evt.target?.result as string);
-      latestData = data;
-      renderCharts(data);
-      appendLog('Imported benchmark data from JSON file.');
-    } catch (err: any) {
-      alert('Failed to parse JSON file');
+      latestData = JSON.parse(evt.target?.result as string);
+      renderAllCharts();
+      appendLog('Imported benchmark data from JSON file.', 'success');
+    } catch (err) {
+      appendLog('Failed to parse JSON file', 'error');
     }
   };
   reader.readAsText(file);
 });
 
-const commonOptions: any = {
-  responsive: true,
-  maintainAspectRatio: false,
-  plugins: {
-    tooltip: {
-      callbacks: {
-        label: (ctx: any) => `${ctx.dataset.label}: ${Number(ctx.raw).toFixed(2)} ms`
-      }
-    }
-  },
-  scales: {
-    y: {
-      type: 'logarithmic',
-      title: { display: true, text: 'Time (ms) - Log Scale' },
-      min: 1
-    }
-  }
-};
-
-// Colors
-const colors = [
-  'rgba(54, 162, 235, 0.7)', // blue
-  'rgba(255, 99, 132, 0.7)', // red
-  'rgba(75, 192, 192, 0.7)', // teal
-  'rgba(153, 102, 255, 0.7)', // purple
-  'rgba(255, 159, 64, 0.7)', // orange
-  'rgba(255, 205, 86, 0.7)', // yellow
-];
-
-myChartMetadata = new Chart(metadataChartCtx, {
-  type: 'bar',
-  data: {
-    labels: ['MD Insert', 'MD Read', 'MD Update', 'Search (LIKE/Scan)', 'Search (FTS5)'],
-    datasets: [
-      { label: 'LocalStorage (Main Thread)', data: [0, 0, 0, 0, 0], backgroundColor: colors[0] },
-      { label: 'IndexedDB', data: [0, 0, 0, 0, 0], backgroundColor: colors[1] },
-      { label: 'SQLite WASM (OPFS)', data: [0, 0, 0, 0, 0], backgroundColor: colors[2] }
-    ]
-  },
-  options: { ...commonOptions, plugins: { ...commonOptions.plugins, title: { display: true, text: 'Metadata Operations (1000 rows)' } } }
+btnCopyLogs.addEventListener('click', async () => {
+  await navigator.clipboard.writeText(logsEl.innerText);
+  alert('Logs copied!');
 });
 
-myChartBlob = new Chart(blobChartCtx, {
-  type: 'bar',
-  data: {
-    labels: ['Blob Insert', 'Blob Read'],
-    datasets: [
-      { label: 'SQLite WASM (OPFS)', data: [0, 0], backgroundColor: colors[2] },
-      { label: 'OPFS Native (SyncAccessHandle)', data: [0, 0], backgroundColor: colors[3] },
-      { label: 'IndexedDB', data: [0, 0], backgroundColor: colors[1] }
-    ]
-  },
-  options: { ...commonOptions, plugins: { ...commonOptions.plugins, title: { display: true, text: 'Blob Operations (100x 512KB)' } } }
-});
-
-const compressionOptions = {
-  ...commonOptions,
-  plugins: {
-    ...commonOptions.plugins,
-    tooltip: {
-      callbacks: {
-        label: function (context: any) {
-          let label = context.dataset.label || '';
-          if (label) label += ': ';
-          if (context.parsed.y !== null) {
-            label += context.parsed.y.toFixed(2) + ' ms';
-          }
-          // The dataset index maps roughly to algorithm array order
-          // ratio is assigned by renderCharts dynamically
-          if (context.dataset.ratio) {
-            label += ` (Ratio: ${context.dataset.ratio.toFixed(2)}x)`;
-          }
-          return label;
-        }
-      }
-    }
-  }
-};
-
-myChartCompressionIdb = new Chart(compressionIdbChartCtx, {
-  type: 'bar',
-  data: {
-    labels: ['Compress + Insert', 'Read + Decompress'],
-    datasets: [
-      { label: 'None', data: [0, 0], backgroundColor: colors[0] },
-      { label: 'ZIP (fflate)', data: [0, 0], backgroundColor: colors[1] },
-      { label: 'Gzip (Native)', data: [0, 0], backgroundColor: colors[2] },
-      { label: 'Deflate (Native)', data: [0, 0], backgroundColor: colors[3] },
-      { label: 'Brotli (brotli-wasm)', data: [0, 0], backgroundColor: colors[4] },
-      { label: 'zstd (fzstd)', data: [0, 0], backgroundColor: colors[5] }
-    ]
-  },
-  options: { ...compressionOptions, plugins: { ...compressionOptions.plugins, title: { display: true, text: 'IDB Compression Efficiency (100x 512KB Blobs)' } } }
-});
-
-myChartCompressionOpfs = new Chart(compressionOpfsChartCtx, {
-  type: 'bar',
-  data: {
-    labels: ['Compress + Write', 'Read + Decompress'],
-    datasets: [
-      { label: 'None', data: [0, 0], backgroundColor: colors[0] },
-      { label: 'ZIP (fflate)', data: [0, 0], backgroundColor: colors[1] },
-      { label: 'Gzip (Native)', data: [0, 0], backgroundColor: colors[2] },
-      { label: 'Deflate (Native)', data: [0, 0], backgroundColor: colors[3] },
-      { label: 'Brotli (brotli-wasm)', data: [0, 0], backgroundColor: colors[4] },
-      { label: 'zstd (fzstd)', data: [0, 0], backgroundColor: colors[5] }
-    ]
-  },
-  options: { ...compressionOptions, plugins: { ...compressionOptions.plugins, title: { display: true, text: 'OPFS Compression Efficiency (100x 512KB Blobs)' } } }
-});
-
-function renderCharts(data: any) {
-  // Metadata
-  if (data.metadata?.localStorage) {
-    myChartMetadata.data.datasets[0].data = [data.metadata.localStorage.insert, data.metadata.localStorage.read, data.metadata.localStorage.update, data.metadata.localStorage.search, NaN];
-  }
-  if (data.metadata?.idb) {
-    myChartMetadata.data.datasets[1].data = [data.metadata.idb.insert, data.metadata.idb.read, data.metadata.idb.update, data.metadata.idb.search, NaN];
-  }
-  if (data.metadata?.sqlite) {
-    myChartMetadata.data.datasets[2].data = [data.metadata.sqlite.insert, data.metadata.sqlite.read, data.metadata.sqlite.update, data.metadata.sqlite.search, data.metadata.sqlite.searchFts];
-  }
-  myChartMetadata.update();
-
-  // Blob Layer
-  if (data.blob?.sqlite) {
-    myChartBlob.data.datasets[0].data = [data.blob.sqlite.insert, data.blob.sqlite.read];
-  }
-  if (data.blob?.opfs) {
-    myChartBlob.data.datasets[1].data = [data.blob.opfs.insert, data.blob.opfs.read];
-  }
-  if (data.blob?.idb) {
-    myChartBlob.data.datasets[2].data = [data.blob.idb.insert, data.blob.idb.read];
-  }
-  myChartBlob.update();
-
-  // Compression (IDB)
-  if (data.compressionIdb?.none) {
-    myChartCompressionIdb.data.datasets[0].data = [data.compressionIdb.none.insert, data.compressionIdb.none.read];
-    (myChartCompressionIdb.data.datasets[0] as any).ratio = 1;
-  }
-  if (data.compressionIdb?.zip) {
-    myChartCompressionIdb.data.datasets[1].data = [data.compressionIdb.zip.insert, data.compressionIdb.zip.read];
-    (myChartCompressionIdb.data.datasets[1] as any).ratio = data.compressionIdb.zip.ratio;
-  }
-  if (data.compressionIdb?.gzip) {
-    myChartCompressionIdb.data.datasets[2].data = [data.compressionIdb.gzip.insert, data.compressionIdb.gzip.read];
-    (myChartCompressionIdb.data.datasets[2] as any).ratio = data.compressionIdb.gzip.ratio;
-  }
-  if (data.compressionIdb?.deflate) {
-    myChartCompressionIdb.data.datasets[3].data = [data.compressionIdb.deflate.insert, data.compressionIdb.deflate.read];
-    (myChartCompressionIdb.data.datasets[3] as any).ratio = data.compressionIdb.deflate.ratio;
-  }
-  if (data.compressionIdb?.brotli) {
-    myChartCompressionIdb.data.datasets[4].data = [data.compressionIdb.brotli.insert, data.compressionIdb.brotli.read];
-    (myChartCompressionIdb.data.datasets[4] as any).ratio = data.compressionIdb.brotli.ratio;
-  }
-  if (data.compressionIdb?.zstd) {
-    myChartCompressionIdb.data.datasets[5].data = [data.compressionIdb.zstd.insert, data.compressionIdb.zstd.read];
-    (myChartCompressionIdb.data.datasets[5] as any).ratio = data.compressionIdb.zstd.ratio;
-  }
-  myChartCompressionIdb.update();
-
-  // Compression (OPFS)
-  if (data.compressionOpfs?.none) {
-    myChartCompressionOpfs.data.datasets[0].data = [data.compressionOpfs.none.insert, data.compressionOpfs.none.read];
-    (myChartCompressionOpfs.data.datasets[0] as any).ratio = 1;
-  }
-  if (data.compressionOpfs?.zip) {
-    myChartCompressionOpfs.data.datasets[1].data = [data.compressionOpfs.zip.insert, data.compressionOpfs.zip.read];
-    (myChartCompressionOpfs.data.datasets[1] as any).ratio = data.compressionOpfs.zip.ratio;
-  }
-  if (data.compressionOpfs?.gzip) {
-    myChartCompressionOpfs.data.datasets[2].data = [data.compressionOpfs.gzip.insert, data.compressionOpfs.gzip.read];
-    (myChartCompressionOpfs.data.datasets[2] as any).ratio = data.compressionOpfs.gzip.ratio;
-  }
-  if (data.compressionOpfs?.deflate) {
-    myChartCompressionOpfs.data.datasets[3].data = [data.compressionOpfs.deflate.insert, data.compressionOpfs.deflate.read];
-    (myChartCompressionOpfs.data.datasets[3] as any).ratio = data.compressionOpfs.deflate.ratio;
-  }
-  if (data.compressionOpfs?.brotli) {
-    myChartCompressionOpfs.data.datasets[4].data = [data.compressionOpfs.brotli.insert, data.compressionOpfs.brotli.read];
-    (myChartCompressionOpfs.data.datasets[4] as any).ratio = data.compressionOpfs.brotli.ratio;
-  }
-  if (data.compressionOpfs?.zstd) {
-    myChartCompressionOpfs.data.datasets[5].data = [data.compressionOpfs.zstd.insert, data.compressionOpfs.zstd.read];
-    (myChartCompressionOpfs.data.datasets[5] as any).ratio = data.compressionOpfs.zstd.ratio;
-  }
-  myChartCompressionOpfs.update();
-
-  // Draw Payload Native Chart
-  if (data.payload?.native) {
-    ['1kb', '1mb', '100mb'].forEach((size, sizeIndex) => {
-      const nat = data.payload.native[size];
-      if (nat) {
-        if (nat.sessionStorage) myChartNativeSize.data.datasets[0].data[sizeIndex] = nat.sessionStorage.insert;
-        if (nat.localStorage) myChartNativeSize.data.datasets[1].data[sizeIndex] = nat.localStorage.insert;
-        if (nat.idb) myChartNativeSize.data.datasets[2].data[sizeIndex] = nat.idb.insert;
-        if (nat.opfs) myChartNativeSize.data.datasets[3].data[sizeIndex] = nat.opfs.insert;
-        if (nat.cache) myChartNativeSize.data.datasets[4].data[sizeIndex] = nat.cache.insert;
-      }
-    });
-    myChartNativeSize.update();
-  }
-
-  // Draw Payload Wrapper Chart
-  if (data.payload?.wrapper) {
-    ['1kb', '1mb', '100mb'].forEach((size, sizeIndex) => {
-      const wrap = data.payload.wrapper[size];
-      if (wrap) {
-        if (wrap.dexie) myChartWrapperSize.data.datasets[0].data[sizeIndex] = wrap.dexie.insert;
-        if (wrap.localForage) myChartWrapperSize.data.datasets[1].data[sizeIndex] = wrap.localForage.insert;
-      }
-    });
-    myChartWrapperSize.update();
-  }
-}
-
-myChartNativeSize = new Chart(document.getElementById('native-size-chart') as HTMLCanvasElement, {
-  type: 'bar',
-  data: {
-    labels: ['SessionStorage', 'LocalStorage', 'IndexedDB', 'OPFS Native', 'Cache API'],
-    datasets: [{ label: '1KB (Low)', data: [0, 0, 0, 0, 0], backgroundColor: colors[0] }]
-  },
-  options: { ...commonOptions, plugins: { ...commonOptions.plugins, title: { display: true, text: 'Native Storage Performance' } } }
-});
-
-myChartWrapperSize = new Chart(document.getElementById('wrapper-size-chart') as HTMLCanvasElement, {
-  type: 'bar',
-  data: {
-    labels: ['Dexie.js', 'localForage'],
-    datasets: [{ label: '1KB (Low)', data: [0, 0], backgroundColor: colors[4] }]
-  },
-  options: { ...commonOptions, plugins: { ...commonOptions.plugins, title: { display: true, text: 'Wrapper Libraries Performance' } } }
-});
-
-async function runAveragedScenarioMain(name: string, fn: () => void | Promise<void>) {
-  for (let i = 0; i < 3; i++) {
-    appendLog(`  [TEST] ${name} (Warmup ${i + 1}/3)...`);
-    await fn();
-  }
-  let totalTime = 0;
-  for (let i = 0; i < 10; i++) {
-    appendLog(`  [TEST] ${name} (Run ${i + 1}/10)...`);
-    const s = performance.now();
-    await fn();
-    totalTime += (performance.now() - s);
-  }
-  return totalTime / 10;
-}
-
-function generateString(length: number, prefix: string = '') {
-  let result = prefix;
-  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789 ';
-  for (let i = prefix.length; i < length; i++) {
-    result += chars.charAt(Math.floor(Math.random() * chars.length));
-  }
-  return result;
-}
-
-// LocalStorage test limits
-const NUM_MD_ROWS = 1000;
-const MD_SIZE = 2000;
-
-function disableAllBtns(disabled: boolean) {
-  btnRunMetadata.disabled = disabled;
-  btnRunBlob.disabled = disabled;
-  btnRunCompression.disabled = disabled;
-  btnRun1kb.disabled = disabled;
-  btnRun1mb.disabled = disabled;
-  btnRun100mb.disabled = disabled;
-}
-
-async function runLocalStorageMetadata() {
-  appendLog('Starting UI Thread Benchmark for LocalStorage (may freeze momentarily)...');
-  await new Promise(r => setTimeout(r, 100)); // Paint
-  const testMdData = Array.from({ length: NUM_MD_ROWS }, (_, i) => ({
-    id: `md_${i}`,
-    title: `Test Document ${i}`,
-    content: generateString(MD_SIZE, i % 10 === 0 ? 'specific_keyword_search_string ' : ''),
-    updatedAt: Date.now()
-  }));
-
-  const lsResult = { insert: 0, read: 0, update: 0, search: 0 };
-  try {
-    lsResult.insert = await runAveragedScenarioMain('LS Insert', () => {
-      localStorage.clear();
-      for (const row of testMdData) { localStorage.setItem(row.id, JSON.stringify(row)); }
-    });
-    lsResult.read = await runAveragedScenarioMain('LS Read', () => {
-      for (let i = 0; i < NUM_MD_ROWS; i++) JSON.parse(localStorage.getItem(`md_${i}`) || '{}');
-    });
-    lsResult.update = await runAveragedScenarioMain('LS Update', () => {
-      for (let i = 0; i < NUM_MD_ROWS; i++) {
-        const item = JSON.parse(localStorage.getItem(`md_${i}`) || '{}');
-        item.content = `updated_content_${i}`;
-        localStorage.setItem(`md_${i}`, JSON.stringify(item));
-      }
-    });
-    lsResult.search = await runAveragedScenarioMain('LS Search', () => {
-      for (let i = 0; i < NUM_MD_ROWS; i++) {
-        const item = JSON.parse(localStorage.getItem(`md_${i}`) || '{}');
-        if (item.content.includes('specific_keyword_search_string')) { }
-      }
-    });
-    localStorage.clear();
-  } catch (e: any) { appendLog(`❌ LocalStorage Error: ${e.message}`); }
-  return { lsResult, testMdData };
-}
-
-btnRunMetadata.addEventListener('click', async () => {
-  disableAllBtns(true);
-  logsEl.innerHTML = '';
-  const { lsResult, testMdData } = await runLocalStorageMetadata();
-  worker.postMessage({ type: 'start_metadata', lsResult, testMdData });
-});
-
-btnRunBlob.addEventListener('click', () => {
-  disableAllBtns(true); logsEl.innerHTML = '';
-  worker.postMessage({ type: 'start_blob' });
-});
-
-btnRunCompression.addEventListener('click', () => {
-  disableAllBtns(true); logsEl.innerHTML = '';
-  worker.postMessage({ type: 'start_compression' });
-});
-
-async function runWebStoragePayload(sizeLabel: '1kb' | '1mb' | '100mb', sizeBytes: number) {
-  appendLog(`Starting UI Thread Benchmark for Web Storage Payload (${sizeLabel})...`);
-  await new Promise(r => setTimeout(r, 100)); // Paint
-
-  // High payload (100MB) will crash Web Storage quota (usually 5MB limit).
-  if (sizeBytes > 5 * 1024 * 1024) {
-    appendLog(`⚠️ Web Storage skipped for ${sizeLabel} payload (exceeds typical 5MB quota)`);
-    return { sessionStorage: { insert: NaN, read: NaN }, localStorage: { insert: NaN, read: NaN } };
-  }
-
-  const payloadString = generateString(sizeBytes);
-  const resultSession = { insert: 0, read: 0 };
-  const resultLocal = { insert: 0, read: 0 };
-
-  try {
-    resultSession.insert = await runAveragedScenarioMain('SessionStorage Insert', () => {
-      sessionStorage.clear(); sessionStorage.setItem('payload', payloadString);
-    });
-    resultSession.read = await runAveragedScenarioMain('SessionStorage Read', () => {
-      sessionStorage.getItem('payload');
-    });
-    sessionStorage.clear();
-  } catch (e: any) { appendLog(`❌ SessionStorage Error: ${e.message}`); }
-
-  try {
-    resultLocal.insert = await runAveragedScenarioMain('LocalStorage Insert', () => {
-      localStorage.clear(); localStorage.setItem('payload', payloadString);
-    });
-    resultLocal.read = await runAveragedScenarioMain('LocalStorage Read', () => {
-      localStorage.getItem('payload');
-    });
-    localStorage.clear();
-  } catch (e: any) { appendLog(`❌ LocalStorage Error: ${e.message}`); }
-
-  return { sessionStorage: resultSession, localStorage: resultLocal };
-}
-
-btnRun1kb.addEventListener('click', async () => {
-  disableAllBtns(true); logsEl.innerHTML = '';
-  const webStorageRes = await runWebStoragePayload('1kb', 1024);
-  worker.postMessage({ type: 'start_payload', sizeLabel: '1kb', sizeBytes: 1024, webStorageRes });
-});
-
-btnRun1mb.addEventListener('click', async () => {
-  disableAllBtns(true); logsEl.innerHTML = '';
-  const webStorageRes = await runWebStoragePayload('1mb', 1024 * 1024);
-  worker.postMessage({ type: 'start_payload', sizeLabel: '1mb', sizeBytes: 1024 * 1024, webStorageRes });
-});
-
-btnRun100mb.addEventListener('click', async () => {
-  disableAllBtns(true); logsEl.innerHTML = '';
-  const webStorageRes = await runWebStoragePayload('100mb', 100 * 1024 * 1024);
-  worker.postMessage({ type: 'start_payload', sizeLabel: '100mb', sizeBytes: 100 * 1024 * 1024, webStorageRes });
-});
-
+// ===== Worker Message Handling =====
 worker.onmessage = (e) => {
   if (e.data.type === 'log') {
-    appendLog(e.data.message);
+    appendLog(e.data.message.msg, e.data.message.type || 'info');
   } else if (e.data.type === 'error') {
-    appendLog(`❌ ERROR: ${e.data.message}`);
-    disableAllBtns(false);
-  } else if (e.data.type === 'done') {
-    disableAllBtns(false);
-
-    // Deep merge partial results into latestData
-    const payload = e.data.payload;
-    if (payload.metadata) latestData.metadata = payload.metadata;
-    if (payload.blob) latestData.blob = payload.blob;
-    if (payload.compressionIdb) latestData.compressionIdb = payload.compressionIdb;
-    if (payload.compressionOpfs) latestData.compressionOpfs = payload.compressionOpfs;
-    if (payload.payload) latestData.payload = payload.payload;
-
-    renderCharts(latestData);
-    appendLog('--- Benchmark Complete ---');
+    appendLog(e.data.message, 'error');
+    disableButtons(nativeBtns, false);
+    disableButtons(wrapperBtns, false);
+    disableButtons(compressionBtns, false);
+    if (isRunningAll) {
+      testQueue = [];
+      runNextInQueue(); // Finish up
+    }
+  } else if (e.data.type === 'done_native') {
+    Object.assign(latestData.native[e.data.sizeName], e.data.payload);
+    updateNativeChart(e.data.sizeName);
+    appendLog(`Native (${e.data.sizeName}) Complete!`, 'success');
+    disableButtons(nativeBtns, false);
+    if (isRunningAll) runNextInQueue();
+  } else if (e.data.type === 'done_wrapper') {
+    Object.assign(latestData.wrapper[e.data.sizeName], e.data.payload);
+    updateWrapperChart(e.data.sizeName);
+    appendLog(`Wrapper (${e.data.sizeName}) Complete!`, 'success');
+    disableButtons(wrapperBtns, false);
+    if (isRunningAll) runNextInQueue();
+  } else if (e.data.type === 'done_compression') {
+    latestData.compression[e.data.sizeName] = e.data.payload;
+    updateCompressionChart(e.data.sizeName);
+    appendLog(`Compression (${e.data.sizeName}) Complete!`, 'success');
+    disableButtons(compressionBtns, false);
+    if (isRunningAll) runNextInQueue();
   }
 };
+
+// Start
+initCharts();
