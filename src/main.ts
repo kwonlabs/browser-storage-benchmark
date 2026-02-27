@@ -90,21 +90,31 @@ function addLog(msg: string, type: 'system' | 'success' | 'error' = 'system') {
 }
 
 function switchToTab(targetId: string) {
+  // Clear all actives
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+
+  // Set new active content
+  const targetContent = document.getElementById(targetId);
+  if (targetContent) {
+    targetContent.classList.add('active');
+  } else {
+    console.error('Target tab content not found:', targetId);
+    return;
+  }
+
+  // Sync nav button if exists
   document.querySelectorAll('.tab-btn').forEach(b => {
     const btn = b as HTMLElement;
     if (btn.dataset.target === targetId) {
-      // Direct UI update instead of btn.click() to avoid redundant history states
-      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-      document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
       btn.classList.add('active');
-      const targetContent = document.getElementById(targetId);
-      if (targetContent) targetContent.classList.add('active');
     }
   });
 }
 
 function handleRouting() {
-  const path = window.location.pathname;
+  const path = window.location.pathname.replace(/\/$/, '') || '/';
+
   if (path === '/' || path === '/index.html') {
     switchToTab('tab-home');
   } else if (path === '/report') {
