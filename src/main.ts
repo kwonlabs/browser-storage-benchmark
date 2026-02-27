@@ -319,13 +319,26 @@ compressionWorker.onmessage = (e) => {
 // Event Listeners
 document.querySelectorAll('.tab-btn').forEach(btn => {
   btn.addEventListener('click', () => {
+    const target = (btn as HTMLElement).dataset.target!;
+
+    // Update UI
     document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
     document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
     btn.classList.add('active');
-    const target = (btn as HTMLElement).dataset.target!;
     document.getElementById(target)?.classList.add('active');
-    localStorage.setItem('active_tab', target);
+
+    // Update URL without reload
+    const url = new URL(window.location.href);
+    url.searchParams.set('tab', target);
+    window.history.pushState({}, '', url.toString());
   });
+});
+
+// Sync UI on browser back/forward
+window.addEventListener('popstate', () => {
+  const urlParams = new URLSearchParams(window.location.search);
+  const tab = urlParams.get('tab') || 'tab-home';
+  switchToTab(tab);
 });
 
 btnToggleAdvanced.addEventListener('click', (e) => {
@@ -477,11 +490,10 @@ async function loadLatest() {
 loadLatest();
 refreshHistory();
 
-// Restore Tab
-const savedTab = localStorage.getItem('active_tab');
-if (savedTab) {
-  switchToTab(savedTab);
-}
+// Restore Tab (URL first, then fallback)
+const urlParams = new URLSearchParams(window.location.search);
+const initialTab = urlParams.get('tab') || 'tab-home';
+switchToTab(initialTab);
 
 // Event Listeners
 btnShowHistory.addEventListener('click', () => {
