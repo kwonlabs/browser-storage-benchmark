@@ -5,6 +5,10 @@ import { switchToTab } from './router';
 import { saveSession, getAllSessions, deleteSession, clearAllSessions } from './lib/db';
 import { setLatestData } from './runner';
 
+// Comparison State
+let isCompareMode = false;
+let selectedSessions: string[] = [];
+
 // UI Elements
 const consoleLogs = document.getElementById('console-logs') as HTMLDivElement;
 const progressBar = document.getElementById('progress-bar-fill') as HTMLDivElement;
@@ -139,7 +143,7 @@ function renderCompressionTable(containerId: string, activeSizeKeys: string[], m
     container.innerHTML = html;
 }
 
-function updateStorageTrends(latestData: BenchmarkData, category: 'low' | 'high-native' | 'high-wrapper', members: string[]) {
+function updateStorageTrends(latestData: BenchmarkData, category: 'low' | 'high-native' | 'high-wrapper', members: string[], compareData?: BenchmarkData) {
     const isLow = category === 'low';
     const dataCategory = category.startsWith('high') ? 'high' : 'low';
 
@@ -147,36 +151,66 @@ function updateStorageTrends(latestData: BenchmarkData, category: 'low' | 'high-
     const readChart = chartRegistry.get(`${category}-read`);
     if (!writeChart || !readChart) return;
 
-    // Identify and filter sizeKeys down to only those that have actual test data in this category run
+    // Identify and filter sizeKeys down to only those that have actual test data
     const activeSizeKeys = Object.keys(SIZES).filter(size => {
-        // If it's explicitly low capacity logic we already cap at 6 keys
         if (isLow && Object.keys(SIZES).indexOf(size) > 5) return false;
-
-        // Return true if any member has data for this size constraint
-        return members.some(m => {
+        const inA = members.some(m => {
             const entry = latestData[dataCategory]?.[size]?.[m];
             return !!entry && (entry.insert !== undefined || entry.read !== undefined);
         });
+        const inB = compareData ? members.some(m => {
+            const entry = compareData[dataCategory]?.[size]?.[m];
+            return !!entry && (entry.insert !== undefined || entry.read !== undefined);
+        }) : false;
+        return inA || inB;
     });
 
     writeChart.data.labels = activeSizeKeys;
     readChart.data.labels = activeSizeKeys;
 
-    writeChart.data.datasets = members.map((m, i) => ({
-        label: m,
-        borderColor: COLORS[i % COLORS.length].border,
-        backgroundColor: COLORS[i % COLORS.length].main,
-        tension: 0.3,
-        data: activeSizeKeys.map(size => mapVal(latestData[dataCategory]?.[size]?.[m]?.insert))
-    }));
+    const datasetsW: any[] = [];
+    const datasetsR: any[] = [];
 
-    readChart.data.datasets = members.map((m, i) => ({
-        label: m,
-        borderColor: COLORS[i % COLORS.length].border,
-        backgroundColor: COLORS[i % COLORS.length].main,
-        tension: 0.3,
-        data: activeSizeKeys.map(size => mapVal(latestData[dataCategory]?.[size]?.[m]?.read))
-    }));
+    members.forEach((m, i) => {
+        // Session A
+        datasetsW.push({
+            label: compareData ? `${m} (A)` : m,
+            borderColor: COLORS[i % COLORS.length].border,
+            backgroundColor: COLORS[i % COLORS.length].main,
+            tension: 0.3,
+            data: activeSizeKeys.map(size => mapVal(latestData[dataCategory]?.[size]?.[m]?.insert))
+        });
+        datasetsR.push({
+            label: compareData ? `${m} (A)` : m,
+            borderColor: COLORS[i % COLORS.length].border,
+            backgroundColor: COLORS[i % COLORS.length].main,
+            tension: 0.3,
+            data: activeSizeKeys.map(size => mapVal(latestData[dataCategory]?.[size]?.[m]?.read))
+        });
+
+        // Session B
+        if (compareData) {
+            datasetsW.push({
+                label: `${m} (B)`,
+                borderColor: COLORS[i % COLORS.length].border,
+                backgroundColor: 'transparent',
+                borderDash: [5, 5],
+                tension: 0.3,
+                data: activeSizeKeys.map(size => mapVal(compareData[dataCategory]?.[size]?.[m]?.insert))
+            });
+            datasetsR.push({
+                label: `${m} (B)`,
+                borderColor: COLORS[i % COLORS.length].border,
+                backgroundColor: 'transparent',
+                borderDash: [5, 5],
+                tension: 0.3,
+                data: activeSizeKeys.map(size => mapVal(compareData[dataCategory]?.[size]?.[m]?.read))
+            });
+        }
+    });
+
+    writeChart.data.datasets = datasetsW;
+    readChart.data.datasets = datasetsR;
 
     writeChart.update();
     readChart.update();
@@ -191,7 +225,7 @@ function updateStorageTrends(latestData: BenchmarkData, category: 'low' | 'high-
     }
 }
 
-function updateCompressionTrends(latestData: BenchmarkData) {
+function updateCompressionTrends(latestData: BenchmarkData, compareData?: BenchmarkData) {
     const speedChart = chartRegistry.get('compression-speed');
     const ratioChart = chartRegistry.get('compression-ratio');
     if (!speedChart || !ratioChart) return;
@@ -199,30 +233,63 @@ function updateCompressionTrends(latestData: BenchmarkData) {
     const members = ['ZIP', 'Gzip', 'Deflate', 'Brotli', 'zstd'];
 
     const activeSizeKeys = Object.keys(SIZES).filter(size => {
-        return members.some(m => {
+        const inA = members.some(m => {
             const entry = latestData.compression?.[size]?.[m];
             return !!entry && (entry.compressTime !== undefined || entry.ratio !== undefined);
         });
+        const inB = compareData ? members.some(m => {
+            const entry = compareData.compression?.[size]?.[m];
+            return !!entry && (entry.compressTime !== undefined || entry.ratio !== undefined);
+        }) : false;
+        return inA || inB;
     });
 
     speedChart.data.labels = activeSizeKeys;
     ratioChart.data.labels = activeSizeKeys;
 
-    speedChart.data.datasets = members.map((m, i) => ({
-        label: m,
-        borderColor: COLORS[i % COLORS.length].border,
-        backgroundColor: COLORS[i % COLORS.length].main,
-        tension: 0.3,
-        data: activeSizeKeys.map(size => mapVal(latestData.compression[size]?.[m]?.compressTime))
-    }));
+    const datasetsS: any[] = [];
+    const datasetsR: any[] = [];
 
-    ratioChart.data.datasets = members.map((m, i) => ({
-        label: m,
-        borderColor: COLORS[i % COLORS.length].border,
-        backgroundColor: COLORS[i % COLORS.length].main,
-        tension: 0.3,
-        data: activeSizeKeys.map(size => mapVal(latestData.compression[size]?.[m]?.ratio))
-    }));
+    members.forEach((m, i) => {
+        // Session A
+        datasetsS.push({
+            label: compareData ? `${m} (A)` : m,
+            borderColor: COLORS[i % COLORS.length].border,
+            backgroundColor: COLORS[i % COLORS.length].main,
+            tension: 0.3,
+            data: activeSizeKeys.map(size => mapVal(latestData.compression[size]?.[m]?.compressTime))
+        });
+        datasetsR.push({
+            label: compareData ? `${m} (A)` : m,
+            borderColor: COLORS[i % COLORS.length].border,
+            backgroundColor: COLORS[i % COLORS.length].main,
+            tension: 0.3,
+            data: activeSizeKeys.map(size => mapVal(latestData.compression[size]?.[m]?.ratio))
+        });
+
+        // Session B
+        if (compareData) {
+            datasetsS.push({
+                label: `${m} (B)`,
+                borderColor: COLORS[i % COLORS.length].border,
+                backgroundColor: 'transparent',
+                borderDash: [5, 5],
+                tension: 0.3,
+                data: activeSizeKeys.map(size => mapVal(compareData.compression[size]?.[m]?.compressTime))
+            });
+            datasetsR.push({
+                label: `${m} (B)`,
+                borderColor: COLORS[i % COLORS.length].border,
+                backgroundColor: 'transparent',
+                borderDash: [5, 5],
+                tension: 0.3,
+                data: activeSizeKeys.map(size => mapVal(compareData.compression[size]?.[m]?.ratio))
+            });
+        }
+    });
+
+    speedChart.data.datasets = datasetsS;
+    ratioChart.data.datasets = datasetsR;
 
     speedChart.update();
     ratioChart.update();
@@ -325,11 +392,11 @@ export function updateSummaryDashboard(latestData: BenchmarkData) {
     }
 }
 
-export function updateTrendCharts(latestData: BenchmarkData) {
-    updateStorageTrends(latestData, 'low', ['Cookie', 'SessionStorage', 'LocalStorage', 'store.js']);
-    updateStorageTrends(latestData, 'high-native', ['Cache API', 'IndexedDB', 'OPFS (Async)', 'OPFS (Sync)']);
-    updateStorageTrends(latestData, 'high-wrapper', ['SQLite (Async)', 'SQLite (Sync)', 'localForage', 'Dexie', 'PouchDB']);
-    updateCompressionTrends(latestData);
+export function updateTrendCharts(latestData: BenchmarkData, compareData?: BenchmarkData) {
+    updateStorageTrends(latestData, 'low', ['Cookie', 'SessionStorage', 'LocalStorage', 'store.js'], compareData);
+    updateStorageTrends(latestData, 'high-native', ['Cache API', 'IndexedDB', 'OPFS (Async)', 'OPFS (Sync)'], compareData);
+    updateStorageTrends(latestData, 'high-wrapper', ['SQLite (Async)', 'SQLite (Sync)', 'localForage', 'Dexie', 'PouchDB'], compareData);
+    updateCompressionTrends(latestData, compareData);
     updateSummaryDashboard(latestData);
 }
 
@@ -355,22 +422,45 @@ export async function refreshHistory(currentDataRef: BenchmarkData) {
     sessions.forEach(session => {
         const item = document.createElement('div');
         item.className = 'history-item';
+        const isChecked = selectedSessions.includes(session.id.toString());
+
+        const env = session.env;
+        const browser = env?.userAgent.includes('Chrome') ? 'Chrome' : (env?.userAgent.includes('Safari') ? 'Safari' : (env?.userAgent.includes('Firefox') ? 'Firefox' : 'Browser'));
+        const envLabel = env ? `${browser} (${env.hardwareConcurrency} Cores)` : 'Unknown Env';
+
         item.innerHTML = `
-      <div class="history-info">
-        <span class="history-time">${session.timestamp}</span>
-        <span class="history-id">#${session.id.toString().slice(-6)}</span>
+      <input type="checkbox" class="history-checkbox" ${isChecked ? 'checked' : ''} data-id="${session.id}">
+      <div class="history-info" style="flex: 1; display: flex; flex-direction: column; gap: 0.2rem;">
+        <span class="history-time" style="font-weight: 600; font-size: 0.9rem;">${session.timestamp}</span>
+        <div style="display: flex; align-items: center; gap: 0.4rem;">
+            <span style="font-size: 0.7rem; opacity: 0.7; padding: 1px 5px; background: rgba(255,255,255,0.08); border-radius: 4px; border: 1px solid rgba(255,255,255,0.05);">${envLabel}</span>
+            <span class="history-id" style="font-size: 0.65rem; opacity: 0.5;">#${session.id.toString().slice(-6)}</span>
+        </div>
       </div>
       <button class="btn-delete-session" data-id="${session.id}">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
       </button>
     `;
+
+        const checkbox = item.querySelector('.history-checkbox') as HTMLInputElement;
+
         item.addEventListener('click', (e) => {
             if ((e.target as HTMLElement).closest('.btn-delete-session')) return;
+            if (isCompareMode) {
+                checkbox.checked = !checkbox.checked;
+                handleSelection(session.id.toString(), checkbox.checked);
+                return;
+            }
             setLatestData(session.data);
             updateTrendCharts(session.data);
             addLog(`Loaded historical session from ${session.timestamp}.`);
             historyPanel.style.display = 'none';
             switchToTab('tab-report');
+        });
+
+        checkbox.addEventListener('click', (e) => {
+            e.stopPropagation();
+            handleSelection(session.id.toString(), checkbox.checked);
         });
 
         item.querySelector('.btn-delete-session')?.addEventListener('click', async (e) => {
@@ -383,6 +473,29 @@ export async function refreshHistory(currentDataRef: BenchmarkData) {
 
         historyList.appendChild(item);
     });
+}
+
+async function handleSelection(id: string, checked: boolean) {
+    if (checked) {
+        if (!selectedSessions.includes(id)) selectedSessions.push(id);
+        if (selectedSessions.length > 2) {
+            selectedSessions.shift();
+            // Need to uncheck the previous one in DOM if we want full sync, 
+            // but refreshHistory will handle it on next render if we call it.
+            // For now, let's keep it simple.
+        }
+    } else {
+        selectedSessions = selectedSessions.filter(s => s !== id);
+    }
+    updateCompareBtn();
+}
+
+function updateCompareBtn() {
+    const btnCompare = document.getElementById('btn-run-compare') as HTMLButtonElement;
+    if (btnCompare) {
+        btnCompare.innerText = `Compare Selected (${selectedSessions.length}/2)`;
+        btnCompare.disabled = selectedSessions.length !== 2;
+    }
 }
 
 export function initUIListeners(latestDataRef: BenchmarkData) {
@@ -411,6 +524,44 @@ export function initUIListeners(latestDataRef: BenchmarkData) {
         historyPanel.style.display = isHidden ? 'flex' : 'none';
         if (isHidden) refreshHistory(latestDataRef);
     });
+
+    const btnToggleCompare = document.getElementById('btn-toggle-compare') as HTMLButtonElement;
+    const btnRunCompare = document.getElementById('btn-run-compare') as HTMLButtonElement;
+    const btnCancelCompare = document.getElementById('btn-cancel-compare') as HTMLButtonElement;
+
+    function exitCompareMode() {
+        isCompareMode = false;
+        selectedSessions = [];
+        historyPanel.classList.remove('compare-active');
+        btnRunCompare.style.display = 'none';
+        btnCancelCompare.style.display = 'none';
+        refreshHistory(latestDataRef);
+    }
+
+    btnToggleCompare?.addEventListener('click', () => {
+        isCompareMode = !isCompareMode;
+        historyPanel.classList.toggle('compare-active', isCompareMode);
+        btnRunCompare.style.display = isCompareMode ? 'block' : 'none';
+        btnCancelCompare.style.display = isCompareMode ? 'block' : 'none';
+        if (!isCompareMode) selectedSessions = [];
+        refreshHistory(latestDataRef);
+    });
+
+    btnRunCompare?.addEventListener('click', async () => {
+        if (selectedSessions.length !== 2) return;
+        const sessions = await getAllSessions();
+        const s1 = sessions.find(s => s.id.toString() === selectedSessions[0]);
+        const s2 = sessions.find(s => s.id.toString() === selectedSessions[1]);
+        if (s1 && s2) {
+            setLatestData(s1.data);
+            updateTrendCharts(s1.data, s2.data);
+            addLog(`Comparing Session #${s1.id.toString().slice(-4)} vs #${s2.id.toString().slice(-4)}`);
+            historyPanel.style.display = 'none';
+            switchToTab('tab-report');
+        }
+    });
+
+    btnCancelCompare?.addEventListener('click', exitCompareMode);
 
     btnCloseHistory?.addEventListener('click', () => {
         historyPanel.style.display = 'none';

@@ -334,6 +334,13 @@
                 </svg>
               </button>
               <input type="file" id="input-import-json" style="display: none;" accept=".json">
+              <button id="btn-toggle-compare" class="btn-icon-s" title="Compare Mode">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                  stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="2" y="2" width="20" height="20" rx="2" ry="2" />
+                  <line x1="12" y1="2" x2="12" y2="22" />
+                </svg>
+              </button>
               <button id="btn-close-history" class="btn-icon-s btn-close-s" title="Close">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
                   stroke-linecap="round" stroke-linejoin="round">
@@ -346,7 +353,11 @@
           <div class="history-list" id="history-list">
             <!-- Sessions will be injected here -->
           </div>
-          <div class="history-footer">
+          <div class="history-footer" style="display: flex; gap: 0.5rem; flex-direction: column;">
+            <button id="btn-run-compare" class="btn-primary-large-s" style="display: none; width: 100%;">Compare
+              Selected (0/2)</button>
+            <button id="btn-cancel-compare" class="btn-outline" style="display: none; width: 100%;">Exit
+              Comparison</button>
             <button id="btn-clear-history" class="btn-danger-text">Clear All History</button>
           </div>
         </div>
