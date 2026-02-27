@@ -87,9 +87,10 @@ function addLog(msg: string, type: 'system' | 'success' | 'error' = 'system') {
 }
 
 function switchToTab(tabId: string) {
+  const targetId = tabId.startsWith('tab-') ? tabId : `tab-${tabId}`;
   document.querySelectorAll('.tab-btn').forEach(b => {
     const btn = b as HTMLElement;
-    if (btn.dataset.target === tabId) {
+    if (btn.dataset.target === targetId) {
       btn.click();
     }
   });
@@ -492,8 +493,8 @@ refreshHistory();
 
 // Restore Tab (URL first, then fallback)
 const urlParams = new URLSearchParams(window.location.search);
-const initialTab = urlParams.get('tab') || 'tab-home';
-switchToTab(initialTab);
+const p = urlParams.get('p') || 'home';
+switchToTab(p);
 
 // Event Listeners
 btnShowHistory.addEventListener('click', () => {
