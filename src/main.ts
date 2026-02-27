@@ -110,9 +110,9 @@ function handleRouting() {
   } else if (path === '/report') {
     switchToTab('tab-report');
   } else {
-    // Basic 404: Redirect to home or show error
-    console.warn('404: Path not found', path);
-    switchToTab('tab-home');
+    // Show 404 Tab
+    switchToTab('tab-404');
+    addLog(`404: Path not found - ${path}`, 'error');
   }
 }
 

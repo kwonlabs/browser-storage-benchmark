@@ -984,6 +984,54 @@ main {
   transition: all 0.2s;
 }
 
+/* Error / 404 Page */
+.error-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 60vh;
+}
+
+.error-card {
+  text-align: center;
+  background: var(--glass);
+  padding: 4rem;
+  border-radius: 32px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(24px);
+  max-width: 500px;
+  width: 90%;
+  box-shadow: 0 40px 80px -12px rgba(0, 0, 0, 0.5);
+}
+
+.error-card h1 {
+  font-size: 6rem;
+  font-weight: 900;
+  margin: 1rem 0;
+  background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  line-height: 1;
+}
+
+.error-card h2 {
+  font-size: 1.5rem;
+  margin-bottom: 1rem;
+  color: #fff;
+}
+
+.error-card p {
+  color: var(--text-muted);
+  margin-bottom: 2rem;
+}
+
+.error-icon {
+  margin-bottom: 1.5rem;
+  color: var(--accent-primary);
+  opacity: 0.8;
+}
+
 .btn-danger-text:hover {
   color: #ef4444;
   text-decoration: underline;
