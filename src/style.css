@@ -1069,7 +1069,9 @@ footer {
 .footer-container {
   max-width: 1200px;
   margin: 0 auto;
-  text-align: center;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
 .footer-container p {
@@ -1077,4 +1079,30 @@ footer {
   font-size: 0.9rem;
   font-weight: 500;
   letter-spacing: 0.02em;
+}
+
+.github-link {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--text-muted);
+  text-decoration: none;
+  font-size: 0.9rem;
+  font-weight: 600;
+  transition: all 0.2s;
+  padding: 0.5rem 1rem;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 10px;
+}
+
+.github-link:hover {
+  color: var(--text-main);
+  background: var(--bg-hover);
+  border-color: var(--accent-primary);
+  transform: translateY(-2px);
+}
+
+.github-link svg {
+  opacity: 0.8;
 }
