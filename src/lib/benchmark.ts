@@ -22,9 +22,14 @@ export async function measureOperation(sizeValue: number, operation: () => Promi
 
     let totalTime = 0;
     for (let i = 0; i < iterations; i++) {
-        const t = await operation();
-        if (t < 0) return -1; // Error occurred
-        totalTime += t;
+        try {
+            const t = await operation();
+            if (t < 0) return -1; // Error occurred
+            totalTime += t;
+        } catch (err) {
+            console.error('Benchmark Op Error:', err);
+            return -1;
+        }
     }
     return totalTime / iterations;
 }

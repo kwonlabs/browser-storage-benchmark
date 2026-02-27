@@ -44,8 +44,16 @@ self.onmessage = async (e) => {
             results['PouchDB'] = {
                 insert: await measureOperation(sizeValue, async () => {
                     const s = performance.now();
-                    try { const existing = await pdb.get(k); await pdb.put({ _id: k, _rev: existing._rev, val: str }); }
-                    catch (err) { await pdb.put({ _id: k, val: str }); }
+                    try {
+                        const existing: any = await pdb.get(k);
+                        await pdb.put({ _id: k, _rev: existing._rev, val: str });
+                    } catch (err: any) {
+                        if (err.status === 404) {
+                            await pdb.put({ _id: k, val: str });
+                        } else {
+                            throw err;
+                        }
+                    }
                     return performance.now() - s;
                 }),
                 read: await measureOperation(sizeValue, async () => { const s = performance.now(); await pdb.get(k); return performance.now() - s; }),
@@ -57,8 +65,12 @@ self.onmessage = async (e) => {
                 }),
                 delete: await measureOperation(sizeValue, async () => {
                     const s = performance.now();
-                    const doc2: any = await pdb.get(k);
-                    await pdb.remove(doc2);
+                    try {
+                        const doc2: any = await pdb.get(k);
+                        await pdb.remove(doc2);
+                    } catch (err: any) {
+                        if (err.status !== 404) throw err;
+                    }
                     return performance.now() - s;
                 })
             };
