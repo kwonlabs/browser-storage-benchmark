@@ -5,6 +5,8 @@ import Dexie from 'dexie';
 import PouchDB from 'pouchdb-browser';
 import { generatePayloadString, measureOperation } from '../lib/benchmark';
 
+let syncPoolUtil: any = null;
+
 self.onmessage = async (e) => {
     const { type, sizeName, sizeValue } = e.data;
 
@@ -79,12 +81,12 @@ self.onmessage = async (e) => {
             const { default: sqlite3InitModule } = await import('@sqlite.org/sqlite-wasm');
             const sqlite3 = await sqlite3InitModule();
 
+            // SQLite (Async) - Uses standard OPFS VFS
             if ('opfs' in sqlite3) {
-                const db = new sqlite3.oo1.OpfsDb('/bench.sqlite3', 'c');
+                const db = new sqlite3.oo1.OpfsDb('/bench_async.sqlite3', 'c');
                 try {
                     db.exec("CREATE TABLE IF NOT EXISTS data (id TEXT PRIMARY KEY, val TEXT)");
-
-                    results['SQLite'] = {
+                    results['SQLite (Async)'] = {
                         insert: await measureOperation(sizeValue, () => {
                             const s = performance.now();
                             db.exec({ sql: "INSERT OR REPLACE INTO data (id, val) VALUES (?, ?)", bind: [k, str] });
@@ -110,10 +112,53 @@ self.onmessage = async (e) => {
                     db.close();
                 }
             } else {
-                results['SQLite'] = { insert: -1, read: -1, update: -1, delete: -1 };
+                results['SQLite (Async)'] = { insert: -1, read: -1, update: -1, delete: -1 };
             }
+
+            // SQLite (Sync) - Uses Sync Access Handle Pool VFS
+            if (sqlite3.installOpfsSAHPoolVfs) {
+                if (!syncPoolUtil) {
+                    syncPoolUtil = await sqlite3.installOpfsSAHPoolVfs({
+                        name: 'opfs-sahpool'
+                    });
+                }
+                const db = new syncPoolUtil.OpfsSAHPoolDb('/bench_sync.sqlite3');
+                try {
+                    db.exec("CREATE TABLE IF NOT EXISTS data (id TEXT PRIMARY KEY, val TEXT)");
+                    // clear old data if running repeatedly
+                    db.exec("DELETE FROM data");
+                    results['SQLite (Sync)'] = {
+                        insert: await measureOperation(sizeValue, () => {
+                            const s = performance.now();
+                            db.exec({ sql: "INSERT OR REPLACE INTO data (id, val) VALUES (?, ?)", bind: [k, str] });
+                            return performance.now() - s;
+                        }),
+                        read: await measureOperation(sizeValue, () => {
+                            const s = performance.now();
+                            db.exec({ sql: "SELECT val FROM data WHERE id = ?", bind: [k], returnValue: "resultRows" });
+                            return performance.now() - s;
+                        }),
+                        update: await measureOperation(sizeValue, () => {
+                            const s = performance.now();
+                            db.exec({ sql: "UPDATE data SET val = ? WHERE id = ?", bind: [modStr, k] });
+                            return performance.now() - s;
+                        }),
+                        delete: await measureOperation(sizeValue, () => {
+                            const s = performance.now();
+                            db.exec({ sql: "DELETE FROM data WHERE id = ?", bind: [k] });
+                            return performance.now() - s;
+                        })
+                    };
+                } finally {
+                    db.close();
+                }
+            } else {
+                results['SQLite (Sync)'] = { insert: -1, read: -1, update: -1, delete: -1 };
+            }
+
         } catch (err) {
-            results['SQLite'] = { insert: -1, read: -1, update: -1, delete: -1 };
+            results['SQLite (Async)'] = { insert: -1, read: -1, update: -1, delete: -1 };
+            results['SQLite (Sync)'] = { insert: -1, read: -1, update: -1, delete: -1 };
         }
 
         self.postMessage({ type: 'done_wrapper', sizeName, payload: results });

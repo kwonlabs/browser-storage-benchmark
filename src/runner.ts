@@ -5,7 +5,19 @@ import { updateProgress, addLog, updateTrendCharts, markBenchmarkFinished, btnRe
 import { switchToTab } from './router';
 
 export let isRunning = false;
-export let latestData: BenchmarkData = { low: {}, high: {}, compression: {} };
+
+function buildEmptyData(): BenchmarkData {
+    const data: BenchmarkData = { low: {}, high: {}, compression: {} };
+    const sizeKeys = Object.keys(SIZES);
+    sizeKeys.forEach(s => {
+        data.low[s] = {};
+        data.high[s] = {};
+        data.compression[s] = {} as any;
+    });
+    return data;
+}
+
+export let latestData: BenchmarkData = buildEmptyData();
 
 let testQueue: TaskDef[] = [];
 let totalTasks = 0;
@@ -17,7 +29,13 @@ const wrapperWorker = new Worker(new URL('./workers/wrapper.worker.ts', import.m
 const compressionWorker = new Worker(new URL('./workers/compression.worker.ts', import.meta.url), { type: 'module' });
 
 export function setLatestData(data: BenchmarkData) {
-    latestData = data;
+    // Merge loaded data with the empty structure to guarantee no missing root keys
+    const empty = buildEmptyData();
+    latestData = {
+        low: { ...empty.low, ...data?.low },
+        high: { ...empty.high, ...data?.high },
+        compression: { ...empty.compression, ...data?.compression }
+    };
 }
 
 export async function runMainThreadNative(sizeName: string, sizeValue: number) {

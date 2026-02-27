@@ -20,7 +20,25 @@
         <h1 class="logo">Browser Storage Benchmark</h1>
       </div>
       <div class="header-right">
-        <nav class="tabs">
+        <nav class="tabs" style="display: flex; align-items: center; gap: 0.5rem;">
+          <button id="btn-theme-toggle" class="btn-icon-s" style="margin-right: 0.5rem;" title="Toggle Theme">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round" class="icon-moon">
+              <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+            </svg>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round" class="icon-sun" style="display: none;">
+              <circle cx="12" cy="12" r="5"></circle>
+              <line x1="12" y1="1" x2="12" y2="3"></line>
+              <line x1="12" y1="21" x2="12" y2="23"></line>
+              <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+              <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+              <line x1="1" y1="12" x2="3" y2="12"></line>
+              <line x1="21" y1="12" x2="23" y2="12"></line>
+              <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+              <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+            </svg>
+          </button>
           <button class="tab-btn active" data-target="tab-home">Home</button>
           <button class="tab-btn" data-target="tab-report">Report</button>
         </nav>
@@ -46,7 +64,7 @@
         <!-- Low-Capacity Storage Section -->
         <section class="guide-group">
           <div class="group-header">
-            <h3>⚡ Low-Capacity Storage (&lt;10MB)</h3>
+            <h3>⚡ Volatile Storage (&lt;10MB)</h3>
             <p>Synchronous storage APIs best suited for lightweight data and configuration.</p>
           </div>
           <div class="guide-grid-large">
@@ -84,11 +102,12 @@
           </div>
         </section>
 
-        <!-- High-Capacity Storage Section -->
+        <!-- High-Capacity Storage (Native) Section -->
         <section class="guide-group">
           <div class="group-header">
-            <h3>🗄️ High-Capacity Storage (&gt;10MB)</h3>
-            <p>Asynchronous APIs designed for large datasets, binary payloads, and offline capabilities.</p>
+            <h3>🗄️ Persistent Storage</h3>
+            <p>Built-in browser asynchronous APIs designed for large datasets, binary payloads, and offline
+              capabilities.</p>
           </div>
           <div class="guide-grid-large">
             <div class="guide-card">
@@ -115,12 +134,23 @@
                   environment. Sync API available in workers.</p>
               </div>
             </div>
+          </div>
+        </section>
+
+        <!-- High-Capacity Storage (Library) Section -->
+        <section class="guide-group">
+          <div class="group-header">
+            <h3>📚 Persistent Library</h3>
+            <p>Third-party wrappers and embedded databases that abstract native endpoints for enriched functionality.
+            </p>
+          </div>
+          <div class="guide-grid-large">
             <div class="guide-card">
               <div class="card-icon">💎</div>
               <div class="card-body">
-                <h4>SQLite (WASM)</h4>
-                <p>The legendary relational database running via WebAssembly. Provides full SQL capabilities on top of
-                  OPFS.</p>
+                <h4>SQLite (Async / Sync)</h4>
+                <p>The legendary relational database running via WebAssembly. Custom OPFS Virtual File Systems provide
+                  both async and sahpool sync paradigms.</p>
               </div>
             </div>
             <div class="guide-card">
@@ -232,8 +262,9 @@
                   <div class="row-label"><span>Targets</span></div>
                   <div class="row-content">
                     <div class="checkbox-list">
-                      <label><input type="checkbox" class="category-check" value="low" checked> Low-Capacity</label>
-                      <label><input type="checkbox" class="category-check" value="high" checked> High-Capacity</label>
+                      <label><input type="checkbox" class="category-check" value="low" checked> Volatile Storage</label>
+                      <label><input type="checkbox" class="category-check" value="high" checked> Persistent
+                        Storage/Library</label>
                       <label><input type="checkbox" class="category-check" value="compression" checked>
                         Compression</label>
                     </div>
@@ -320,6 +351,29 @@
           </div>
         </div>
 
+        <div class="summary-dashboard">
+          <div class="summary-card">
+            <span class="card-label">Best Write (Avg)</span>
+            <span class="card-value" id="summary-best-write">--</span>
+            <span class="card-subtitle" id="summary-best-write-tech">Waiting...</span>
+          </div>
+          <div class="summary-card">
+            <span class="card-label">Best Read (Avg)</span>
+            <span class="card-value" id="summary-best-read">--</span>
+            <span class="card-subtitle" id="summary-best-read-tech">Waiting...</span>
+          </div>
+          <div class="summary-card">
+            <span class="card-label">Best Compression</span>
+            <span class="card-value" id="summary-best-compress">--</span>
+            <span class="card-subtitle" id="summary-best-compress-tech">Waiting...</span>
+          </div>
+          <div class="summary-card">
+            <span class="card-label">Total Time</span>
+            <span class="card-value" id="summary-total-time">--</span>
+            <span class="card-subtitle">All suites</span>
+          </div>
+        </div>
+
         <div class="report-console" id="report-console">
           <div class="console-header">Benchmark Console Logs</div>
           <div class="console-body" id="console-logs">
@@ -329,35 +383,101 @@
 
         <div class="report-grid">
           <div class="report-section">
-            <h3 class="section-title">⚡ Low-Capacity Storage Trends</h3>
+            <h3 class="section-title">⚡ Volatile Storage Trends</h3>
             <div class="trend-layout">
-              <div class="report-chart-item">
-                <canvas id="chart-trend-low-write"></canvas>
+              <div class="report-chart-item" id="item-low-write">
+                <div class="empty-state" id="empty-low-write">No data available.<br><small>Run Benchmark to see
+                    results.</small></div>
+                <div class="chart-wrapper" id="wrap-low-write" style="display: none;"><canvas
+                    id="chart-trend-low-write"></canvas></div>
+                <div class="data-table-toggle" id="toggle-low-write" style="display: none;"><button
+                    class="btn-text-mini btn-toggle-table" data-target="table-low-write">Show Data Table ▼</button>
+                </div>
+                <div class="data-table-container" id="table-low-write" style="display: none;"></div>
               </div>
-              <div class="report-chart-item">
-                <canvas id="chart-trend-low-read"></canvas>
+              <div class="report-chart-item" id="item-low-read">
+                <div class="empty-state" id="empty-low-read">No data available.<br><small>Run Benchmark to see
+                    results.</small></div>
+                <div class="chart-wrapper" id="wrap-low-read" style="display: none;"><canvas
+                    id="chart-trend-low-read"></canvas></div>
+                <div class="data-table-toggle" id="toggle-low-read" style="display: none;"><button
+                    class="btn-text-mini btn-toggle-table" data-target="table-low-read">Show Data Table ▼</button></div>
+                <div class="data-table-container" id="table-low-read" style="display: none;"></div>
               </div>
             </div>
           </div>
           <div class="report-section">
-            <h3 class="section-title">🗄️ High-Capacity Storage Trends</h3>
+            <h3 class="section-title">🗄️ Persistent Storage Trends</h3>
             <div class="trend-layout">
-              <div class="report-chart-item">
-                <canvas id="chart-trend-high-write"></canvas>
+              <div class="report-chart-item" id="item-high-native-write">
+                <div class="empty-state" id="empty-high-native-write">No data available.<br><small>Run Benchmark to see
+                    results.</small></div>
+                <div class="chart-wrapper" id="wrap-high-native-write" style="display: none;"><canvas
+                    id="chart-trend-high-native-write"></canvas></div>
+                <div class="data-table-toggle" id="toggle-high-native-write" style="display: none;"><button
+                    class="btn-text-mini btn-toggle-table" data-target="table-high-native-write">Show Data Table
+                    ▼</button></div>
+                <div class="data-table-container" id="table-high-native-write" style="display: none;"></div>
               </div>
-              <div class="report-chart-item">
-                <canvas id="chart-trend-high-read"></canvas>
+              <div class="report-chart-item" id="item-high-native-read">
+                <div class="empty-state" id="empty-high-native-read">No data available.<br><small>Run Benchmark to see
+                    results.</small></div>
+                <div class="chart-wrapper" id="wrap-high-native-read" style="display: none;"><canvas
+                    id="chart-trend-high-native-read"></canvas></div>
+                <div class="data-table-toggle" id="toggle-high-native-read" style="display: none;"><button
+                    class="btn-text-mini btn-toggle-table" data-target="table-high-native-read">Show Data Table
+                    ▼</button></div>
+                <div class="data-table-container" id="table-high-native-read" style="display: none;"></div>
+              </div>
+            </div>
+          </div>
+          <div class="report-section">
+            <h3 class="section-title">📚 Persistent Library Trends</h3>
+            <div class="trend-layout">
+              <div class="report-chart-item" id="item-high-wrapper-write">
+                <div class="empty-state" id="empty-high-wrapper-write">No data available.<br><small>Run Benchmark to see
+                    results.</small></div>
+                <div class="chart-wrapper" id="wrap-high-wrapper-write" style="display: none;"><canvas
+                    id="chart-trend-high-wrapper-write"></canvas></div>
+                <div class="data-table-toggle" id="toggle-high-wrapper-write" style="display: none;"><button
+                    class="btn-text-mini btn-toggle-table" data-target="table-high-wrapper-write">Show Data Table
+                    ▼</button></div>
+                <div class="data-table-container" id="table-high-wrapper-write" style="display: none;"></div>
+              </div>
+              <div class="report-chart-item" id="item-high-wrapper-read">
+                <div class="empty-state" id="empty-high-wrapper-read">No data available.<br><small>Run Benchmark to see
+                    results.</small></div>
+                <div class="chart-wrapper" id="wrap-high-wrapper-read" style="display: none;"><canvas
+                    id="chart-trend-high-wrapper-read"></canvas></div>
+                <div class="data-table-toggle" id="toggle-high-wrapper-read" style="display: none;"><button
+                    class="btn-text-mini btn-toggle-table" data-target="table-high-wrapper-read">Show Data Table
+                    ▼</button></div>
+                <div class="data-table-container" id="table-high-wrapper-read" style="display: none;"></div>
               </div>
             </div>
           </div>
           <div class="report-section">
             <h3 class="section-title">🗜️ Compression Efficiency Trends</h3>
             <div class="trend-layout">
-              <div class="report-chart-item">
-                <canvas id="chart-trend-compression-speed"></canvas>
+              <div class="report-chart-item" id="item-compression-speed">
+                <div class="empty-state" id="empty-compression-speed">No data available.<br><small>Run Benchmark to see
+                    results.</small></div>
+                <div class="chart-wrapper" id="wrap-compression-speed" style="display: none;"><canvas
+                    id="chart-trend-compression-speed"></canvas></div>
+                <div class="data-table-toggle" id="toggle-compression-speed" style="display: none;"><button
+                    class="btn-text-mini btn-toggle-table" data-target="table-compression-speed">Show Data Table
+                    ▼</button></div>
+                <div class="data-table-container" id="table-compression-speed" style="display: none;"></div>
               </div>
-              <div class="report-chart-item">
-                <canvas id="chart-trend-compression-ratio"></canvas>
+              <div class="report-chart-item" id="item-compression-ratio">
+                <div class="empty-state" id="empty-compression-ratio">No data available.<br><small>Run Benchmark to see
+                    results.</small></div>
+                <div class="chart-wrapper" id="wrap-compression-ratio" style="display: none;"><canvas
+                    id="chart-trend-compression-ratio"></canvas></div>
+                <div class="data-table-toggle" id="toggle-compression-ratio" style="display: none;"><button
+                    class="btn-text-mini btn-toggle-table" data-target="table-compression-ratio">Show Data Table
+                    ▼</button></div>
+                <div class="data-table-container" id="table-compression-ratio" style="display: none;"></div>
               </div>
             </div>
           </div>

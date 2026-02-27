@@ -2,13 +2,14 @@ import './style.css';
 import { SIZES } from './constants';
 import type { TaskDef } from './types';
 import { initRouter, handleRouting } from './router';
-import { addLog, initCharts, initUIListeners, updateTrendCharts } from './ui';
+import { addLog, initCharts, initUIListeners, updateTrendCharts, btnReportRun } from './ui';
 import { startBenchmark, latestData, setLatestData } from './runner';
 import { getLatestSession } from './lib/db';
+import { applyThemeToChart } from './lib/charts';
+import { chartRegistry } from './ui';
 
 // DOM Elements
 const btnRunAll = document.getElementById('btn-run-all') as HTMLButtonElement;
-const btnReportRun = document.getElementById('btn-report-run') as HTMLButtonElement;
 const btnToggleAdvanced = document.getElementById('btn-toggle-advanced') as HTMLAnchorElement;
 const advancedPanel = document.getElementById('advanced-controller') as HTMLDivElement;
 const btnExport = document.getElementById('btn-export-json') as HTMLButtonElement;
@@ -29,8 +30,49 @@ const btnSizeAll = document.getElementById('size-all') as HTMLButtonElement;
 const btnSizeNone = document.getElementById('size-none') as HTMLButtonElement;
 const btnSizeDefault = document.getElementById('size-default') as HTMLButtonElement;
 
+// Internal Theme Initialization
+function initThemeToggle() {
+  const btnTheme = document.getElementById('btn-theme-toggle') as HTMLButtonElement | null;
+  const iconSun = btnTheme?.querySelector('.icon-sun') as SVGElement | null;
+  const iconMoon = btnTheme?.querySelector('.icon-moon') as SVGElement | null;
+
+  function applyTheme(theme: 'light' | 'dark') {
+    document.documentElement.setAttribute('data-theme', theme);
+    localStorage.setItem('theme', theme);
+    if (iconSun && iconMoon) {
+      if (theme === 'dark') {
+        iconSun.style.display = 'none';
+        iconMoon.style.display = 'block';
+      } else {
+        iconSun.style.display = 'block';
+        iconMoon.style.display = 'none';
+      }
+    }
+    // Update active charts with the new computed CSS vars
+    chartRegistry.forEach((chart) => {
+      applyThemeToChart(chart);
+    });
+  }
+
+  // Load saved or OS default
+  const savedTheme = localStorage.getItem('theme');
+  if (savedTheme === 'light' || savedTheme === 'dark') {
+    applyTheme(savedTheme);
+  } else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches) {
+    applyTheme('light');
+  }
+
+  // Toggle Listener
+  btnTheme?.addEventListener('click', () => {
+    const currentTheme = document.documentElement.getAttribute('data-theme') ||
+      (window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
+    applyTheme(currentTheme === 'dark' ? 'light' : 'dark');
+  });
+}
+
 // Initialization
 async function initializeApp() {
+  initThemeToggle();
   initCharts();
   initRouter();
   initUIListeners(latestData);

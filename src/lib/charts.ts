@@ -16,81 +16,94 @@ export function getGradient(ctx: CanvasRenderingContext2D, color: string) {
     return gradient;
 }
 
-export const TREND_OPTIONS = {
-    responsive: true,
-    maintainAspectRatio: false,
-    color: '#94a3b8',
-    scales: {
-        x: {
-            title: { display: true, text: 'Payload Size', color: '#94a3b8', font: { weight: 'bold' } },
-            grid: { color: 'rgba(255, 255, 255, 0.05)' },
-            ticks: { color: '#94a3b8', font: { family: 'Inter', size: 10 } }
-        },
-        y: {
-            type: 'logarithmic' as const,
-            title: { display: true, text: 'Time (ms)', color: '#94a3b8', font: { weight: 'bold' } },
-            grid: { color: 'rgba(255, 255, 255, 0.1)' },
-            ticks: {
-                color: '#94a3b8',
-                font: { family: 'Inter', size: 10 },
-                callback: function (value: any) {
-                    if (value >= 1000) return (value / 1000).toFixed(0) + 's';
-                    if (value >= 1) return value.toFixed(0) + 'ms';
-                    return value.toFixed(3) + 'ms';
-                }
-            }
-        }
-    },
-    plugins: {
-        legend: {
-            position: 'top' as const,
-            align: 'end' as const,
-            labels: {
-                color: '#f8fafc',
-                usePointStyle: true,
-                pointStyle: 'circle',
-                boxWidth: 6,
-                padding: 15,
-                font: { family: 'Outfit', size: 11, weight: 'bold' }
-            }
-        },
-        tooltip: {
-            backgroundColor: 'rgba(15, 23, 42, 0.95)',
-            titleColor: '#f8fafc',
-            bodyColor: '#cbd5e1',
-            borderColor: 'rgba(255, 255, 255, 0.1)',
-            borderWidth: 1,
-            padding: 12,
-            cornerRadius: 12,
-            boxPadding: 6,
-            bodyFont: { family: 'Inter', size: 12 },
-            callbacks: {
-                label: (context: any) => {
-                    let label = context.dataset.label || '';
-                    if (label) label += ': ';
-                    if (context.parsed.y !== null) {
-                        const val = context.parsed.y;
-                        label += val < 1 ? val.toFixed(4) : val.toFixed(2);
-                        label += (context.dataset.yAxisID === 'yRatio' ? 'x' : ' ms');
+export function getCssVar(name: string) {
+    return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+}
+
+export function getTrendOptions() {
+    const textMain = getCssVar('--text-main') || '#f8fafc';
+    const textMuted = getCssVar('--text-muted') || '#94a3b8';
+    const borderColor = getCssVar('--border-color') || 'rgba(255, 255, 255, 0.08)';
+    const bgCard = getCssVar('--bg-card') || 'rgba(15, 23, 42, 0.95)';
+
+    return {
+        responsive: true,
+        maintainAspectRatio: false,
+        color: textMuted,
+        scales: {
+            x: {
+                title: { display: true, text: 'Payload Size', color: textMuted, font: { weight: 'bold' } },
+                grid: { color: borderColor },
+                ticks: { color: textMuted, font: { family: 'Inter', size: 10 } }
+            },
+            y: {
+                type: 'logarithmic' as const,
+                title: { display: true, text: 'Time (ms)', color: textMuted, font: { weight: 'bold' } },
+                grid: { color: borderColor },
+                ticks: {
+                    color: textMuted,
+                    font: { family: 'Inter', size: 10 },
+                    callback: function (value: any) {
+                        if (value >= 1000) return (value / 1000).toFixed(0) + 's';
+                        if (value >= 1) return value.toFixed(0) + 'ms';
+                        return value.toFixed(3) + 'ms';
                     }
-                    return label;
+                }
+            }
+        },
+        plugins: {
+            legend: {
+                position: 'top' as const,
+                align: 'end' as const,
+                labels: {
+                    color: textMain,
+                    usePointStyle: true,
+                    pointStyle: 'circle',
+                    boxWidth: 6,
+                    padding: 15,
+                    font: { family: 'Outfit', size: 11, weight: 'bold' }
+                }
+            },
+            tooltip: {
+                backgroundColor: bgCard,
+                titleColor: textMain,
+                bodyColor: textMuted,
+                borderColor: borderColor,
+                borderWidth: 1,
+                padding: 12,
+                cornerRadius: 12,
+                boxPadding: 6,
+                bodyFont: { family: 'Inter', size: 12 },
+                callbacks: {
+                    label: (context: any) => {
+                        let label = context.dataset.label || '';
+                        if (label) label += ': ';
+                        if (context.parsed.y !== null) {
+                            const val = context.parsed.y;
+                            label += val < 1 ? val.toFixed(4) : val.toFixed(2);
+                            label += (context.dataset.yAxisID === 'yRatio' ? 'x' : ' ms');
+                        }
+                        return label;
+                    }
                 }
             }
         }
-    }
-} as any;
+    } as any;
+}
 
 export function mapVal(v: any) {
     if (v === -1 || v === -2 || v === undefined || v === null) return null;
     return Math.max(v, 0.0001);
 }
 
-export function createTrendChart(canvas: HTMLCanvasElement, title: string, yLabel: string, isRatio = false) {
-    const options = JSON.parse(JSON.stringify(TREND_OPTIONS));
+export function createTrendChart(canvas: HTMLCanvasElement, title: string, yLabel: string, isRatio = false, labels: string[] = ['128B', '1KB', '10KB', '100KB', '1MB', '10MB', '100MB', '1GB']) {
+    const textMain = getCssVar('--text-main') || '#f8fafc';
+    const options = getTrendOptions();
+
     options.plugins.title = {
         display: true,
         text: title,
-        color: '#f8fafc',
+        color: textMain,
         font: { family: 'Outfit', size: 16, weight: '800' },
         padding: { bottom: 20 }
     };
@@ -105,7 +118,39 @@ export function createTrendChart(canvas: HTMLCanvasElement, title: string, yLabe
 
     return new Chart(canvas, {
         type: 'line',
-        data: { labels: ['128B', '1KB', '10KB', '100KB', '1MB', '10MB', '100MB', '1GB'], datasets: [] },
+        data: { labels, datasets: [] },
         options: options
     });
+}
+
+export function applyThemeToChart(chart: Chart) {
+    const options = getTrendOptions();
+    const textMain = getCssVar('--text-main') || '#f8fafc';
+
+    // Copy new theme properties onto the existing chart instance safely
+    if (chart.options.color !== undefined) chart.options.color = options.color;
+    if (chart.options.scales?.x) {
+        const xScale = chart.options.scales.x as any;
+        xScale.grid = options.scales.x.grid;
+        xScale.ticks = { ...xScale.ticks, ...options.scales.x.ticks };
+        if (xScale.title) xScale.title.color = options.scales.x.title.color;
+    }
+    if (chart.options.scales?.y) {
+        const yScale = chart.options.scales.y as any;
+        yScale.grid = options.scales.y.grid;
+        yScale.ticks = { ...yScale.ticks, ...options.scales.y.ticks };
+        if (yScale.title) yScale.title.color = options.scales.y.title.color;
+    }
+    if (chart.options.plugins?.legend?.labels) chart.options.plugins.legend.labels.color = options.plugins.legend.labels.color;
+    if (chart.options.plugins?.tooltip) {
+        chart.options.plugins.tooltip.backgroundColor = options.plugins.tooltip.backgroundColor;
+        chart.options.plugins.tooltip.titleColor = options.plugins.tooltip.titleColor;
+        chart.options.plugins.tooltip.bodyColor = options.plugins.tooltip.bodyColor;
+        chart.options.plugins.tooltip.borderColor = options.plugins.tooltip.borderColor;
+    }
+    if (chart.options.plugins?.title) {
+        chart.options.plugins.title.color = textMain;
+    }
+
+    chart.update();
 }
