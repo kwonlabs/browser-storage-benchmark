@@ -50,7 +50,7 @@ const inputImport = document.getElementById('input-import-json') as HTMLInputEle
 const logo = document.querySelector('.logo') as HTMLDivElement;
 logo.addEventListener('click', () => {
   window.history.pushState({}, '', '/');
-  switchToTab('home');
+  handleRouting();
 });
 
 const consoleLogs = document.getElementById('console-logs') as HTMLDivElement;
@@ -89,14 +89,31 @@ function addLog(msg: string, type: 'system' | 'success' | 'error' = 'system') {
   consoleLogs.scrollTop = consoleLogs.scrollHeight;
 }
 
-function switchToTab(tabId: string) {
-  const targetId = tabId.startsWith('tab-') ? tabId : `tab-${tabId}`;
+function switchToTab(targetId: string) {
   document.querySelectorAll('.tab-btn').forEach(b => {
     const btn = b as HTMLElement;
     if (btn.dataset.target === targetId) {
-      btn.click();
+      // Direct UI update instead of btn.click() to avoid redundant history states
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+      btn.classList.add('active');
+      const targetContent = document.getElementById(targetId);
+      if (targetContent) targetContent.classList.add('active');
     }
   });
+}
+
+function handleRouting() {
+  const path = window.location.pathname;
+  if (path === '/' || path === '/index.html') {
+    switchToTab('tab-home');
+  } else if (path === '/report') {
+    switchToTab('tab-report');
+  } else {
+    // Basic 404: Redirect to home or show error
+    console.warn('404: Path not found', path);
+    switchToTab('tab-home');
+  }
 }
 
 
@@ -324,27 +341,20 @@ compressionWorker.onmessage = (e) => {
 document.querySelectorAll('.tab-btn').forEach(btn => {
   btn.addEventListener('click', () => {
     const target = (btn as HTMLElement).dataset.target!;
-    const pVal = target.replace('tab-', '');
+    const path = target === 'tab-home' ? '/' : '/report';
 
-    // Update UI
-    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-    btn.classList.add('active');
-    document.getElementById(target)?.classList.add('active');
+    switchToTab(target);
 
-    // Update URL (p=home / p=report)
-    const url = new URL(window.location.href);
-    url.searchParams.set('p', pVal);
-    url.searchParams.delete('tab'); // Clean up old system
-    window.history.pushState({}, '', url.toString());
+    // Update URL (Push state)
+    if (window.location.pathname !== path) {
+      window.history.pushState({}, '', path);
+    }
   });
 });
 
 // Sync UI on browser back/forward
 window.addEventListener('popstate', () => {
-  const urlParams = new URLSearchParams(window.location.search);
-  const p = urlParams.get('p') || 'home';
-  switchToTab(p);
+  handleRouting();
 });
 
 btnToggleAdvanced.addEventListener('click', (e) => {
@@ -496,10 +506,8 @@ async function loadLatest() {
 loadLatest();
 refreshHistory();
 
-// Restore Tab (URL first, then fallback)
-const urlParams = new URLSearchParams(window.location.search);
-const p = urlParams.get('p') || 'home';
-switchToTab(p);
+// Restore Tab (URL path)
+handleRouting();
 
 // Event Listeners
 btnShowHistory.addEventListener('click', () => {
