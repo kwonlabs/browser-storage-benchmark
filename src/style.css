@@ -562,7 +562,7 @@ main {
 }
 
 .report-console {
-  background: #000;
+  background: var(--bg-card);
   border-radius: 16px;
   border: 1px solid var(--border-color);
   overflow: hidden;
@@ -570,7 +570,7 @@ main {
 }
 
 .console-header {
-  background: #1a202c;
+  background: var(--bg-hover);
   padding: 0.75rem 1.5rem;
   font-size: 0.8rem;
   font-weight: 700;
@@ -586,11 +586,12 @@ main {
   overflow-y: auto;
   font-family: 'JetBrains Mono', 'Fira Code', monospace;
   font-size: 0.85rem;
+  color: var(--text-main);
 }
 
 .log-entry {
   margin-bottom: 0.4rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  border-bottom: 1px solid var(--border-color);
   padding-bottom: 0.2rem;
 }
 
@@ -617,11 +618,58 @@ main {
   background: var(--bg-card);
   border: 1px solid var(--border-color);
   border-radius: 24px;
-  padding: 2.5rem;
+  padding: 1.5rem 1.25rem;
   box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.3);
   position: relative;
   overflow: hidden;
-  min-height: 450px;
+  min-height: 480px;
+  display: flex;
+  flex-direction: column;
+}
+
+.chart-legend-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-bottom: 1rem;
+  justify-content: center;
+  padding: 0 0.5rem;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  background: var(--bg-hover);
+  padding: 0.15rem 0.5rem;
+  border-radius: 20px;
+  border: 1px solid var(--border-color);
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  user-select: none;
+}
+
+.legend-item:hover {
+  background: var(--glass-strong);
+  border-color: var(--accent-primary);
+  color: var(--text-main);
+  transform: translateY(-1px);
+}
+
+.legend-item.hidden {
+  opacity: 0.4;
+  text-decoration: line-through;
+  background: transparent;
+}
+
+.legend-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  flex-shrink: 0;
 }
 
 .trend-layout {

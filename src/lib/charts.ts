@@ -29,6 +29,7 @@ export function getTrendOptions() {
     return {
         responsive: true,
         maintainAspectRatio: false,
+        animation: false,
         color: textMuted,
         scales: {
             x: {
@@ -53,16 +54,7 @@ export function getTrendOptions() {
         },
         plugins: {
             legend: {
-                position: 'top' as const,
-                align: 'end' as const,
-                labels: {
-                    color: textMain,
-                    usePointStyle: true,
-                    pointStyle: 'circle',
-                    boxWidth: 6,
-                    padding: 15,
-                    font: { family: 'Outfit', size: 11, weight: 'bold' }
-                }
+                display: false
             },
             tooltip: {
                 backgroundColor: bgCard,
