@@ -184,12 +184,12 @@ main {
   justify-content: center;
 }
 
-.hero-section h2 {
+.hero-section h1 {
   font-size: 3rem;
   font-weight: 800;
   margin-bottom: 1rem;
   letter-spacing: -0.03em;
-  background: linear-gradient(to right, #f8fafc, #94a3b8);
+  background: linear-gradient(135deg, var(--text-main), var(--accent-primary));
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -199,14 +199,16 @@ main {
   color: var(--text-muted);
   font-size: 1.2rem;
   max-width: 900px;
-  margin: 0 auto 2.5rem;
-  white-space: nowrap;
+  margin: 0 auto 3.5rem;
+  /* Increased from 2.5rem */
 }
 
 .hero-actions {
   display: flex;
   justify-content: center;
   width: 100%;
+  margin-bottom: 2rem;
+  /* Add some space below the button within hero */
 }
 
 .btn-primary-large {
@@ -248,20 +250,59 @@ main {
   background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
   color: white;
   border: none;
-  padding: 0.75rem 1.75rem;
+  padding: 0.8rem 1.75rem;
   font-size: 1rem;
-  font-weight: 800;
+  font-weight: 700;
   border-radius: 12px;
   cursor: pointer;
-  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-  box-shadow: 0 8px 20px -5px rgba(99, 102, 241, 0.4);
+  transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
   display: flex;
   align-items: center;
-  justify-content: center;
-  gap: 0.75rem;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
+  gap: 0.6rem;
 }
+
+/* Section Divider */
+.section-divider {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  margin: 4rem 0 2rem;
+  width: 100%;
+}
+
+.section-divider hr {
+  flex: 1;
+  border: none;
+  border-top: 2px solid var(--border-color);
+  opacity: 0.8;
+}
+
+.section-divider span {
+  font-family: "Outfit", sans-serif;
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: var(--text-main);
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  white-space: nowrap;
+  padding: 0 0.5rem;
+}
+
+.section-intro {
+  text-align: center;
+  max-width: 900px;
+  margin: 0 auto 4rem;
+  color: var(--text-muted);
+  font-size: 1.1rem;
+  line-height: 1.7;
+}
+
+.section-intro p {
+  color: var(--text-muted);
+  opacity: 0.9;
+}
+
 
 .btn-primary-large-s:hover {
   transform: translateY(-2px) scale(1.02);
@@ -581,18 +622,19 @@ main {
 }
 
 .console-body {
-  height: 180px;
-  padding: 1.25rem;
+  height: 200px;
+  padding: 1rem;
   overflow-y: auto;
   font-family: 'JetBrains Mono', 'Fira Code', monospace;
-  font-size: 0.85rem;
+  font-size: 0.75rem;
+  line-height: 1.4;
   color: var(--text-main);
 }
 
 .log-entry {
-  margin-bottom: 0.4rem;
+  margin-bottom: 0.25rem;
   border-bottom: 1px solid var(--border-color);
-  padding-bottom: 0.2rem;
+  padding-bottom: 0.15rem;
 }
 
 .report-grid {
@@ -859,12 +901,12 @@ main {
   right: 24px;
   width: 360px;
   max-height: calc(100vh - 140px);
-  background: rgba(15, 23, 42, 0.98);
+  background: var(--bg-card);
   backdrop-filter: blur(24px);
   -webkit-backdrop-filter: blur(24px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid var(--border-color);
   border-radius: 20px;
-  box-shadow: 0 40px 80px -12px rgba(0, 0, 0, 0.7);
+  box-shadow: 0 40px 80px -12px rgba(0, 0, 0, 0.3);
   z-index: 1000;
   display: flex;
   flex-direction: column;
@@ -886,11 +928,11 @@ main {
 
 .history-header {
   padding: 1rem 1.25rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  border-bottom: 1px solid var(--border-color);
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background: rgba(255, 255, 255, 0.02);
+  background: var(--bg-hover);
 }
 
 .history-actions-top {
@@ -902,10 +944,7 @@ main {
 .history-header h3 {
   font-size: 1.1rem;
   font-weight: 800;
-  background: linear-gradient(135deg, #fff 0%, #94a3b8 100%);
-  background-clip: text;
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
+  color: var(--text-main);
   margin: 0;
 }
 
@@ -948,8 +987,8 @@ main {
 }
 
 .history-item {
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  background: var(--bg-hover);
+  border: 1px solid var(--border-color);
   border-radius: 12px;
   padding: 0.75rem 1rem;
   cursor: pointer;
@@ -994,7 +1033,7 @@ main {
 .history-time {
   font-size: 0.85rem;
   font-weight: 700;
-  color: #f8fafc;
+  color: var(--text-main);
 }
 
 .history-id {
@@ -1025,9 +1064,9 @@ main {
 
 .history-footer {
   padding: 1rem;
-  border-top: 1px solid rgba(255, 255, 255, 0.05);
+  border-top: 1px solid var(--border-color);
   text-align: center;
-  background: rgba(255, 255, 255, 0.01);
+  background: var(--bg-card);
 }
 
 /* Action Styles */
@@ -1060,12 +1099,12 @@ main {
 }
 
 .advanced-panel-compact {
-  background: rgba(30, 41, 59, 0.5);
+  background: var(--bg-hover);
   border: 1px solid var(--border-color);
   border-radius: 20px;
   padding: 1.5rem;
   margin: 1.5rem 0;
-  box-shadow: inset 0 0 40px rgba(0, 0, 0, 0.2);
+  box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.05);
 }
 
 .advanced-panel-compact .matrix-grid {
@@ -1231,9 +1270,9 @@ body.is-404 header {
 
 footer {
   border-top: 1px solid var(--border-color);
-  padding: 3rem 2rem;
-  margin-top: 6rem;
-  background: rgba(11, 15, 26, 0.4);
+  padding: 2rem;
+  margin-top: 3rem;
+  background: var(--bg-card);
   backdrop-filter: blur(12px);
 }
 
@@ -1262,8 +1301,8 @@ footer {
   font-weight: 600;
   transition: all 0.2s;
   padding: 0.5rem 1rem;
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  background: var(--bg-hover);
+  border: 1px solid var(--border-color);
   border-radius: 10px;
 }
 

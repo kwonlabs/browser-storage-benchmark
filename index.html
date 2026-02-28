@@ -50,8 +50,8 @@
     <!-- TAB: HOME & GUIDE -->
     <section id="tab-home" class="tab-content active">
       <div class="hero-section">
-        <h2>Web Storage Performance Benchmark</h2>
-        <p>Analyze latency and compression efficiency of modern web storage technologies.</p>
+        <h1>Browser Storage Benchmark</h1>
+        <p>Analyze latency and compression efficiency performance of modern web browser storage technologies.</p>
 
         <div class="hero-actions">
           <button id="btn-run-all" class="btn-primary-large">▶ Run Default Benchmark (128B - 10MB)</button>
@@ -60,12 +60,25 @@
 
       </div>
 
+      <div class="section-divider">
+        <hr>
+        <span>Browser Storage & Compression Guide</span>
+        <hr>
+      </div>
+      <div class="section-intro">
+        <p>Modern browsers offer a diverse ecosystem of internal storage mechanisms. Selecting the optimal persistence
+          strategy and compression algorithm tailored to your data's characteristics is critical for performance. Below
+          is an overview of the various storage engines, wrapper libraries, and compression methodologies available
+          within the browser environment.</p>
+      </div>
+
       <div class="tech-guide">
         <!-- Low-Capacity Storage Section -->
         <section class="guide-group">
           <div class="group-header">
-            <h3>⚡ Volatile Storage (&lt;10MB)</h3>
-            <p>Synchronous storage APIs best suited for lightweight data and configuration.</p>
+            <h3>⚡ Volatile Storage</h3>
+            <p>Synchronous storage APIs best suited for lightweight data and configuration, but typically restricted
+              to &lt;10MB.</p>
           </div>
           <div class="guide-grid-large">
             <div class="guide-card">
@@ -107,7 +120,8 @@
           <div class="group-header">
             <h3>🗄️ Persistent Storage</h3>
             <p>Built-in browser asynchronous APIs designed for large datasets, binary payloads, and offline
-              capabilities.</p>
+              capabilities. Storage limits are dynamically managed by the browser and vary by system, typically
+              allowing for several gigabytes or up to 60% of available disk space.</p>
           </div>
           <div class="guide-grid-large">
             <div class="guide-card">
@@ -141,8 +155,9 @@
         <section class="guide-group">
           <div class="group-header">
             <h3>📚 Persistent Library</h3>
-            <p>Third-party wrappers and embedded databases that abstract native endpoints for enriched functionality.
-            </p>
+            <p>Third-party wrappers and embedded databases that abstract native endpoints for enriched
+              functionality. These services share the same storage quotas as the native persistent storage they
+              utilize.</p>
           </div>
           <div class="guide-grid-large">
             <div class="guide-card">
@@ -183,42 +198,48 @@
         <section class="guide-group">
           <div class="group-header">
             <h3>🗜️ Compression Engines</h3>
-            <p>Algorithms used to reduce payload size before storage or transmission.</p>
+            <p>Algorithms used to reduce payload size before storage or transmission. This benchmark supports both
+              native browser-level compression and advanced third-party libraries integrated via WebAssembly.</p>
           </div>
           <div class="guide-grid-large">
             <div class="guide-card">
               <div class="card-icon">📦</div>
               <div class="card-body">
                 <h4>ZIP</h4>
-                <p>Widely used format balancing compression ratio and speed. Great for multi-file payloads.</p>
+                <p>A widely used format implemented via the <code>fflate</code> library, balancing compression ratio
+                  and speed. Ideal for multi-file packaging.</p>
               </div>
             </div>
             <div class="guide-card">
               <div class="card-icon">🌪️</div>
               <div class="card-body">
                 <h4>Gzip</h4>
-                <p>Native browser compression stream using the DEFLATE algorithm. Highly efficient for text data.</p>
+                <p>Utilizes the browser's native <code>CompressionStream</code> API (DEFLATE). Provides zero-overhead
+                  text compression without external dependencies.</p>
               </div>
             </div>
             <div class="guide-card">
               <div class="card-icon">💨</div>
               <div class="card-body">
                 <h4>Deflate</h4>
-                <p>Lower-level algorithm used by ZIP and Gzip, optimized for speed and memory efficiency.</p>
+                <p>The core algorithm for ZIP and Gzip, also supported via <code>CompressionStream</code>. Optimized
+                  for raw performance and low memory footprints.</p>
               </div>
             </div>
             <div class="guide-card">
               <div class="card-icon">🍞</div>
               <div class="card-body">
                 <h4>Brotli</h4>
-                <p>Modern algorithm by Google offering superior compression ratios for web assets compared to Gzip.</p>
+                <p>A high-ratio algorithm by Google. Implemented here via <code>brotli-wasm</code> to ensure
+                  cross-browser consistency and superior data density.</p>
               </div>
             </div>
             <div class="guide-card">
               <div class="card-icon">🦖</div>
               <div class="card-body">
                 <h4>zstd</h4>
-                <p>Real-time compression algorithm from Meta. Provides high ratios at blistering speeds via WASM.</p>
+                <p>Meta's real-time compression engine, integrated via WebAssembly (<code>zstd-wasm</code>). Offers
+                  unparalleled speed and flexibility across various compression levels.</p>
               </div>
             </div>
           </div>
@@ -263,8 +284,10 @@
                   <div class="row-content">
                     <div class="checkbox-list">
                       <label><input type="checkbox" class="category-check" value="low" checked> Volatile Storage</label>
-                      <label><input type="checkbox" class="category-check" value="high" checked> Persistent
-                        Storage/Library</label>
+                      <label><input type="checkbox" class="category-check" value="high-native" checked> Persistent
+                        Native</label>
+                      <label><input type="checkbox" class="category-check" value="high-wrapper" checked> Persistent
+                        Library</label>
                       <label><input type="checkbox" class="category-check" value="compression" checked>
                         Compression</label>
                     </div>

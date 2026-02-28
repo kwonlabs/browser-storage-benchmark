@@ -129,7 +129,7 @@ function runBenchmarkFromUI(isAdvanced: boolean) {
     advancedPanel.style.display = 'none';
     btnToggleAdvanced.classList.remove('toggle-active');
   } else {
-    selectedCats = ['low', 'high'];
+    selectedCats = ['low', 'high-native', 'high-wrapper'];
     selectedSizes = ['128b', '1kb', '10kb', '100kb', '1mb', '10mb'];
   }
 
