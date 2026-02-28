@@ -90,20 +90,34 @@ export async function runMainThreadNative(sizeName: string, sizeValue: number) {
         results['LocalStorage'] = { insert: -2, read: -2, update: -2, delete: -2 };
     }
 
-    // store.js
-    if (sizeValue <= STORAGE_QUOTA) {
-        addLog(`Testing store.js Wrapper [CRUD] (${sizeName.toUpperCase()})...`);
-        results['store.js'] = {
-            insert: await runOne(() => localStorage.setItem(k, str)),
-            read: await runOne(() => localStorage.getItem(k)),
-            update: await runOne(() => localStorage.setItem(k, modStr)),
-            delete: await runOne(() => localStorage.removeItem(k))
-        };
-        addLog(`store.js Wrapper (${sizeName.toUpperCase()}) - Completed.`, 'success');
-    } else {
-        results['store.js'] = { insert: -2, read: -2, update: -2, delete: -2 };
-    }
+    return results;
+}
 
+export async function runStoreJs(sizeName: string, sizeValue: number): Promise<Record<string, BenchmarkResult>> {
+    if (sizeValue > STORAGE_QUOTA) {
+        return { 'store.js': { insert: -2, read: -2, update: -2, delete: -2 } };
+    }
+    const results: Record<string, BenchmarkResult> = {};
+    const k = `bench_k_${sizeName}`;
+    const str = generatePayloadString(sizeValue);
+    const modStr = str + 'm';
+
+    const runOne = async (op: () => void | any) => {
+        try {
+            const start = performance.now();
+            await op();
+            return performance.now() - start;
+        } catch (e) { return -1; }
+    };
+
+    addLog(`Testing store.js Library [CRUD] (${sizeName.toUpperCase()})...`);
+    results['store.js'] = {
+        insert: await runOne(() => localStorage.setItem(k, str)),
+        read: await runOne(() => localStorage.getItem(k)),
+        update: await runOne(() => localStorage.setItem(k, modStr)),
+        delete: await runOne(() => localStorage.removeItem(k))
+    };
+    addLog(`store.js Library (${sizeName.toUpperCase()}) - Completed.`, 'success');
     return results;
 }
 
@@ -142,7 +156,12 @@ export async function runNext() {
         addLog(`Starting Persistent Native tests for ${task.sizeName.toUpperCase()} (IndexedDB, OPFS)...`);
         nativeWorker.postMessage({ type: 'start_native', sizeName: task.sizeName, sizeValue });
     } else if (task.category === 'high-wrapper') {
-        addLog(`Starting Persistent Library tests for ${task.sizeName.toUpperCase()} (Dexie, localForage)...`);
+        addLog(`Starting Storage Library tests for ${task.sizeName.toUpperCase()}...`);
+        // store.js runs on main thread (localStorage needed)
+        const storeResults = await runStoreJs(task.sizeName, sizeValue);
+        latestData.high[task.sizeName] = { ...latestData.high[task.sizeName], ...storeResults };
+        updateTrendCharts(latestData);
+        // Then start the worker for others (Dexie, localForage, PouchDB, SQLite)
         wrapperWorker.postMessage({ type: 'start_wrapper', sizeName: task.sizeName, sizeValue });
     } else if (task.category === 'compression') {
         addLog(`Starting Compression tests for ${task.sizeName.toUpperCase()} (zstd, lz4, gzip)...`);
@@ -212,7 +231,7 @@ wrapperWorker.onmessage = (e) => {
     if (!isRunning) return;
     const { sizeName, payload } = e.data;
     latestData.high[sizeName] = { ...latestData.high[sizeName], ...payload };
-    addLog(`Persistent Library (Dexie, LocalForage) - ${sizeName.toUpperCase()} Completed.`, 'success');
+    addLog(`Storage Library (Dexie, LocalForage) - ${sizeName.toUpperCase()} Completed.`, 'success');
     updateTrendCharts(latestData);
     completedBytes += SIZES[sizeName];
     runNext();

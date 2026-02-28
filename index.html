@@ -104,14 +104,6 @@
                 <p>Persistent key-value storage with a simple API. Limited to ~5MB-10MB and synchronous in nature.</p>
               </div>
             </div>
-            <div class="guide-card">
-              <div class="card-icon">🛠️</div>
-              <div class="card-body">
-                <h4>store.js</h4>
-                <p>A zero-dependency wrapper that picks the best storage (starts with LocalStorage) with a clean,
-                  unified API.</p>
-              </div>
-            </div>
           </div>
         </section>
 
@@ -151,10 +143,10 @@
           </div>
         </section>
 
-        <!-- High-Capacity Storage (Library) Section -->
+        <!-- Storage Library Section -->
         <section class="guide-group">
           <div class="group-header">
-            <h3>📚 Persistent Library</h3>
+            <h3>📚 Storage Library</h3>
             <p>Third-party wrappers and embedded databases that abstract native endpoints for enriched
               functionality. These services share the same storage quotas as the native persistent storage they
               utilize.</p>
@@ -189,6 +181,14 @@
               <div class="card-body">
                 <h4>PouchDB</h4>
                 <p>An offline-first browser DB that can automatically sync with CouchDB and other remote instances.</p>
+              </div>
+            </div>
+            <div class="guide-card">
+              <div class="card-icon">🛠️</div>
+              <div class="card-body">
+                <h4>store.js</h4>
+                <p>A zero-dependency, synchronous wrapper that picks the best storage (typically LocalStorage) with
+                  a clean, unified API for simpler data models.</p>
               </div>
             </div>
           </div>
