@@ -86,55 +86,7 @@ function updateChartVisibility(chartId: string, hasData: boolean) {
     }
 }
 
-function renderCustomLegend(chartId: string, chart: any) {
-    const itemEl = document.getElementById(`item-${chartId}`);
-    if (!itemEl) return;
 
-    let legendContainer = itemEl.querySelector('.chart-legend-container') as HTMLDivElement;
-    if (!legendContainer) {
-        legendContainer = document.createElement('div');
-        legendContainer.className = 'chart-legend-container';
-        const wrapper = itemEl.querySelector('.chart-wrapper');
-        if (wrapper) {
-            itemEl.insertBefore(legendContainer, wrapper);
-        } else {
-            itemEl.appendChild(legendContainer);
-        }
-    }
-
-    legendContainer.innerHTML = '';
-    chart.data.datasets.forEach((dataset: any, index: number) => {
-        const item = document.createElement('div');
-        item.className = 'legend-item';
-        if (!chart.isDatasetVisible(index)) {
-            item.classList.add('hidden');
-        }
-
-        const dot = document.createElement('div');
-        dot.className = 'legend-dot';
-        dot.style.backgroundColor = dataset.borderColor;
-
-        const text = document.createElement('span');
-        text.innerText = dataset.label;
-
-        item.appendChild(dot);
-        item.appendChild(text);
-
-        item.onclick = (e: MouseEvent) => {
-            e.stopPropagation();
-            const isVisible = chart.isDatasetVisible(index);
-            if (isVisible) {
-                chart.hide(index);
-            } else {
-                chart.show(index);
-            }
-            chart.update();
-            renderCustomLegend(chartId, chart);
-        };
-
-        legendContainer.appendChild(item);
-    });
-}
 
 function renderStorageTable(containerId: string, activeSizeKeys: string[], members: string[], latestData: BenchmarkData, dataCategory: 'low' | 'high', op: 'insert' | 'read' | 'update' | 'delete') {
     const container = document.getElementById(containerId);
@@ -273,10 +225,7 @@ function updateStorageTrends(latestData: BenchmarkData, category: 'low' | 'high-
 
     writeChart.update(); readChart.update(); updateChart.update(); deleteChart.update();
 
-    renderCustomLegend(`${category}-write`, writeChart);
-    renderCustomLegend(`${category}-read`, readChart);
-    renderCustomLegend(`${category}-update`, updateChart);
-    renderCustomLegend(`${category}-delete`, deleteChart);
+
 
     const hasData = activeSizeKeys.length > 0;
     updateChartVisibility(`${category}-write`, hasData);
@@ -378,9 +327,7 @@ function updateCompressionTrends(latestData: BenchmarkData) {
         chartRegistry.set(`comp-${pt}-decompress`, dChart);
         chartRegistry.set(`comp-${pt}-ratio`, rChart);
 
-        renderCustomLegend(`comp-${pt}-speed`, sChart);
-        renderCustomLegend(`comp-${pt}-decompress`, dChart);
-        renderCustomLegend(`comp-${pt}-ratio`, rChart);
+
 
         renderSinglePayloadCompressionTable(`table-comp-${pt}`, activeSizeKeys, members, latestData, pt);
     });
@@ -516,8 +463,8 @@ export function updateSummaryDashboard(latestData: BenchmarkData) {
 
 export function updateTrendCharts(latestData: BenchmarkData, compareData?: BenchmarkData) {
     updateStorageTrends(latestData, 'low', ['Cookie', 'SessionStorage', 'LocalStorage'], compareData);
-    updateStorageTrends(latestData, 'high-native', ['Cache API', 'IndexedDB', 'OPFS (Async)', 'OPFS (Sync)'], compareData);
-    updateStorageTrends(latestData, 'high-wrapper', ['SQLite (Async)', 'SQLite (Sync)', 'localForage', 'Dexie.js', 'PouchDB', 'store.js'], compareData);
+    updateStorageTrends(latestData, 'high-native', ['Cache API', 'OPFS (Async)', 'OPFS (Sync)', 'IndexedDB'], compareData);
+    updateStorageTrends(latestData, 'high-wrapper', ['store.js', 'SQLite (Async)', 'SQLite (Sync)', 'localForage', 'Dexie.js', 'PouchDB'], compareData);
     updateCompressionTrends(latestData);
 }
 

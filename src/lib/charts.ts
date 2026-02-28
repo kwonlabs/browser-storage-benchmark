@@ -1,12 +1,21 @@
 import Chart from 'chart.js/auto';
 
 export const COLORS = [
-    { main: 'rgba(59, 130, 246, 0.8)', border: '#3b82f6' }, // Blue
-    { main: 'rgba(16, 185, 129, 0.8)', border: '#10b981' }, // Emerald
-    { main: 'rgba(139, 92, 246, 0.8)', border: '#8b5cf6' }, // Violet
-    { main: 'rgba(245, 158, 11, 0.8)', border: '#f59e0b' }, // Amber
-    { main: 'rgba(239, 68, 68, 0.8)', border: '#ef4444' },  // Red
-    { main: 'rgba(14, 165, 233, 0.8)', border: '#0ea5e9' }  // Sky
+    { main: 'rgba(59, 130, 246, 0.8)', border: '#3b82f6' },  // Blue
+    { main: 'rgba(239, 68, 68, 0.8)', border: '#ef4444' },   // Red
+    { main: 'rgba(234, 179, 8, 0.8)', border: '#eab308' },   // Yellow
+    { main: 'rgba(34, 197, 94, 0.8)', border: '#22c55e' },   // Green
+    { main: 'rgba(168, 85, 247, 0.8)', border: '#a855f7' },  // Purple
+    { main: 'rgba(6, 182, 212, 0.8)', border: '#06b6d4' },   // Cyan
+    { main: 'rgba(236, 72, 153, 0.8)', border: '#ec4899' },  // Pink
+    { main: 'rgba(249, 115, 22, 0.8)', border: '#f97316' },  // Orange
+    { main: 'rgba(14, 165, 233, 0.8)', border: '#0ea5e9' },  // Sky
+    { main: 'rgba(132, 204, 22, 0.8)', border: '#84cc16' },  // Lime
+    { main: 'rgba(99, 102, 241, 0.8)', border: '#6366f1' },  // Indigo
+    { main: 'rgba(244, 63, 94, 0.8)', border: '#f43f5e' },   // Rose
+    { main: 'rgba(245, 158, 11, 0.8)', border: '#f59e0b' },  // Amber
+    { main: 'rgba(20, 184, 166, 0.8)', border: '#14b8a6' },  // Teal
+    { main: 'rgba(217, 70, 239, 0.8)', border: '#d946ef' },  // Fuchsia
 ];
 
 export function getGradient(ctx: CanvasRenderingContext2D, color: string) {
@@ -56,7 +65,17 @@ export function getTrendOptions() {
         },
         plugins: {
             legend: {
-                display: false
+                display: true,
+                position: 'top',
+                padding: 10,
+                labels: {
+                    usePointStyle: true,
+                    boxWidth: 4,
+                    boxHeight: 4,
+                    font: { family: 'Inter', size: 12 },
+                    padding: 10,
+                    color: textMuted
+                }
             },
             tooltip: {
                 backgroundColor: bgCard,
