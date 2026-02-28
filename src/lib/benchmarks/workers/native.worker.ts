@@ -1,5 +1,5 @@
 import { getBenchmarkById } from '../index';
-import { runTimed } from '../benchmark';
+import { runStorageLifecycle, generatePayloadString } from '../benchmark';
 import type { StorageStepDefinitions } from '../types';
 
 self.onmessage = async (e: MessageEvent) => {
@@ -13,15 +13,10 @@ self.onmessage = async (e: MessageEvent) => {
 
     try {
         const steps = unit.run(sizeName, sizeValue) as StorageStepDefinitions;
+        const original = generatePayloadString(sizeValue);
+        const modified = original + 'm';
 
-        if (steps.setup) await steps.setup();
-
-        const result = {
-            insert: await runTimed(sizeValue, steps.insert),
-            read: await runTimed(sizeValue, steps.read),
-            update: await runTimed(sizeValue, steps.update),
-            delete: await runTimed(sizeValue, steps.delete),
-        };
+        const result = await runStorageLifecycle(sizeValue, steps, { original, modified });
 
         if (steps.teardown) await steps.teardown();
 

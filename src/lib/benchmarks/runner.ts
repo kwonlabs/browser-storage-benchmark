@@ -1,5 +1,5 @@
 import { SIZES } from './constants';
-import { runTimed, runTimedWithResult } from './benchmark';
+import { runStorageLifecycle, runCompressionLifecycle, generatePayloadString } from './benchmark';
 import { getBenchmarksByCategory, getBenchmarkById } from './index';
 import type { TaskDef, BenchmarkData, StorageStepDefinitions, CompressionStepDefinitions } from './types';
 import { updateProgress, addLog, updateTrendCharts, markBenchmarkFinished, btnReportRun, progressArea } from '../../ui';
@@ -44,27 +44,14 @@ async function runMainThreadUnit(unitId: string, sizeName: string, sizeValue: nu
 
     try {
         const steps = unit.run(sizeName, sizeValue);
-        if (unit.category === 'compression') {
-            const cSteps = steps as CompressionStepDefinitions;
-            if (cSteps.setup) await cSteps.setup();
-            const firstComp = await Promise.resolve(cSteps.compress());
-            const compSize = firstComp.length;
-            const { time: compressTime } = await runTimedWithResult(() => cSteps.compress());
-            const { time: decompressTime } = await runTimedWithResult(() => cSteps.decompress(firstComp));
-            if (cSteps.teardown) await cSteps.teardown();
+        const original = generatePayloadString(sizeValue);
 
-            const result = { compressTime, decompressTime, ratio: sizeValue / (compSize || 1), compSize };
+        if (unit.category === 'compression') {
+            const result = await runCompressionLifecycle(sizeValue, steps as CompressionStepDefinitions, original);
             latestData.compression[sizeName][unit.name] = result;
         } else {
-            const sSteps = steps as StorageStepDefinitions;
-            if (sSteps.setup) await sSteps.setup();
-            const result = {
-                insert: await runTimed(sizeValue, sSteps.insert),
-                read: await runTimed(sizeValue, sSteps.read),
-                update: await runTimed(sizeValue, sSteps.update),
-                delete: await runTimed(sizeValue, sSteps.delete),
-            };
-            if (sSteps.teardown) await sSteps.teardown();
+            const modified = original + 'm';
+            const result = await runStorageLifecycle(sizeValue, steps as StorageStepDefinitions, { original, modified });
 
             if (unit.category === 'low') {
                 latestData.low[sizeName][unit.name] = result;

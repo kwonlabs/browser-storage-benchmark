@@ -51,12 +51,18 @@ export function initCharts() {
 
     chartRegistry.set('low-write', createTrendChart(document.getElementById('chart-trend-low-write') as HTMLCanvasElement, 'Volatile Storage (<10MB): Write Latency (ms)', 'Latency (ms)', false, LOW_LABELS));
     chartRegistry.set('low-read', createTrendChart(document.getElementById('chart-trend-low-read') as HTMLCanvasElement, 'Volatile Storage (<10MB): Read Latency (ms)', 'Latency (ms)', false, LOW_LABELS));
+    chartRegistry.set('low-update', createTrendChart(document.getElementById('chart-trend-low-update') as HTMLCanvasElement, 'Volatile Storage (<10MB): Update Latency (ms)', 'Latency (ms)', false, LOW_LABELS));
+    chartRegistry.set('low-delete', createTrendChart(document.getElementById('chart-trend-low-delete') as HTMLCanvasElement, 'Volatile Storage (<10MB): Delete Latency (ms)', 'Latency (ms)', false, LOW_LABELS));
 
     chartRegistry.set('high-native-write', createTrendChart(document.getElementById('chart-trend-high-native-write') as HTMLCanvasElement, 'Persistent Storage: Write Latency (ms)', 'Latency (ms)'));
     chartRegistry.set('high-native-read', createTrendChart(document.getElementById('chart-trend-high-native-read') as HTMLCanvasElement, 'Persistent Storage: Read Latency (ms)', 'Latency (ms)'));
+    chartRegistry.set('high-native-update', createTrendChart(document.getElementById('chart-trend-high-native-update') as HTMLCanvasElement, 'Persistent Storage: Update Latency (ms)', 'Latency (ms)'));
+    chartRegistry.set('high-native-delete', createTrendChart(document.getElementById('chart-trend-high-native-delete') as HTMLCanvasElement, 'Persistent Storage: Delete Latency (ms)', 'Latency (ms)'));
 
     chartRegistry.set('high-wrapper-write', createTrendChart(document.getElementById('chart-trend-high-wrapper-write') as HTMLCanvasElement, 'Storage Library: Write Latency (ms)', 'Latency (ms)'));
     chartRegistry.set('high-wrapper-read', createTrendChart(document.getElementById('chart-trend-high-wrapper-read') as HTMLCanvasElement, 'Storage Library: Read Latency (ms)', 'Latency (ms)'));
+    chartRegistry.set('high-wrapper-update', createTrendChart(document.getElementById('chart-trend-high-wrapper-update') as HTMLCanvasElement, 'Storage Library: Update Latency (ms)', 'Latency (ms)'));
+    chartRegistry.set('high-wrapper-delete', createTrendChart(document.getElementById('chart-trend-high-wrapper-delete') as HTMLCanvasElement, 'Storage Library: Delete Latency (ms)', 'Latency (ms)'));
 
     chartRegistry.set('compression-speed', createTrendChart(document.getElementById('chart-trend-compression-speed') as HTMLCanvasElement, 'Compression Speed Trend (ms)', 'Time (ms)'));
     chartRegistry.set('compression-ratio', createTrendChart(document.getElementById('chart-trend-compression-ratio') as HTMLCanvasElement, 'Compression Ratio Trend (x)', 'Ratio (x)', true));
@@ -135,7 +141,7 @@ function renderCustomLegend(chartId: string, chart: any) {
     });
 }
 
-function renderStorageTable(containerId: string, activeSizeKeys: string[], members: string[], latestData: BenchmarkData, dataCategory: 'low' | 'high', op: 'insert' | 'read') {
+function renderStorageTable(containerId: string, activeSizeKeys: string[], members: string[], latestData: BenchmarkData, dataCategory: 'low' | 'high', op: 'insert' | 'read' | 'update' | 'delete') {
     const container = document.getElementById(containerId);
     if (!container) return;
 
@@ -153,8 +159,17 @@ function renderStorageTable(containerId: string, activeSizeKeys: string[], membe
     for (const size of activeSizeKeys) {
         html += `<tr><td>${size.toUpperCase()}</td>`;
         for (const m of members) {
-            const val = latestData[dataCategory]?.[size]?.[m]?.[op];
-            html += `<td>${val !== undefined ? (val < 1 ? val.toFixed(3) : val.toFixed(1)) + ' ms' : '-'}</td>`;
+            const entry = latestData[dataCategory]?.[size]?.[m];
+            const val = entry?.[op];
+            const errorCount = entry?.errors?.[op === 'insert' ? 'insert' : (op === 'read' ? 'read' : (op === 'update' ? 'update' : 'delete'))] || 0;
+
+            if (val !== undefined && val !== -1) {
+                const timeStr = (val < 1 ? val.toFixed(3) : val.toFixed(1)) + ' ms';
+                const errorStr = errorCount > 0 ? ` <span style="color:var(--accent-error); font-size:0.7em;">(${errorCount} Fail)</span>` : '';
+                html += `<td>${timeStr}${errorStr}</td>`;
+            } else {
+                html += `<td>-</td>`;
+            }
         }
         html += `</tr>`;
     }
@@ -180,9 +195,15 @@ function renderCompressionTable(containerId: string, activeSizeKeys: string[], m
     for (const size of activeSizeKeys) {
         html += `<tr><td>${size.toUpperCase()}</td>`;
         for (const m of members) {
-            const val = latestData.compression?.[size]?.[m]?.[op];
-            if (val !== undefined) {
-                html += `<td>${op === 'ratio' ? val.toFixed(2) + 'x' : (val < 1 ? val.toFixed(3) : val.toFixed(1)) + ' ms'}</td>`;
+            const entry = latestData.compression?.[size]?.[m];
+            const val = entry?.[op];
+            const errorCount = entry?.errors || 0;
+            const isValid = entry?.valid !== false;
+
+            if (val !== undefined && val !== -1) {
+                let displayVal = op === 'ratio' ? val.toFixed(2) + 'x' : (val < 1 ? val.toFixed(3) : val.toFixed(1)) + ' ms';
+                const errorStr = !isValid || errorCount > 0 ? ` <span style="color:var(--accent-error); font-size:0.7em;">(Fail: ${errorCount})</span>` : '';
+                html += `<td>${displayVal}${errorStr}</td>`;
             } else {
                 html += `<td>-</td>`;
             }
@@ -199,7 +220,10 @@ function updateStorageTrends(latestData: BenchmarkData, category: 'low' | 'high-
 
     const writeChart = chartRegistry.get(`${category}-write`);
     const readChart = chartRegistry.get(`${category}-read`);
-    if (!writeChart || !readChart) return;
+    const updateChart = chartRegistry.get(`${category}-update`);
+    const deleteChart = chartRegistry.get(`${category}-delete`);
+
+    if (!writeChart || !readChart || !updateChart || !deleteChart) return;
 
     // Identify and filter sizeKeys down to only those that have actual test data
     const activeSizeKeys = Object.keys(SIZES).filter(size => {
@@ -217,64 +241,134 @@ function updateStorageTrends(latestData: BenchmarkData, category: 'low' | 'high-
 
     writeChart.data.labels = activeSizeKeys;
     readChart.data.labels = activeSizeKeys;
+    updateChart.data.labels = activeSizeKeys;
+    deleteChart.data.labels = activeSizeKeys;
 
     const datasetsW: any[] = [];
     const datasetsR: any[] = [];
+    const datasetsU: any[] = [];
+    const datasetsD: any[] = [];
 
     members.forEach((m, i) => {
+        const color = COLORS[i % COLORS.length];
+
         // Session A
         datasetsW.push({
             label: compareData ? `${m} (A)` : m,
-            borderColor: COLORS[i % COLORS.length].border,
-            backgroundColor: COLORS[i % COLORS.length].main,
+            borderColor: color.border,
+            backgroundColor: color.main,
             tension: 0.3,
-            data: activeSizeKeys.map(size => mapVal(latestData[dataCategory]?.[size]?.[m]?.insert))
+            data: activeSizeKeys.map(size => {
+                const entry = latestData[dataCategory]?.[size]?.[m];
+                return (entry && entry.errors?.insert === 0) ? mapVal(entry.insert) : null;
+            })
         });
         datasetsR.push({
             label: compareData ? `${m} (A)` : m,
-            borderColor: COLORS[i % COLORS.length].border,
-            backgroundColor: COLORS[i % COLORS.length].main,
+            borderColor: color.border,
+            backgroundColor: color.main,
             tension: 0.3,
-            data: activeSizeKeys.map(size => mapVal(latestData[dataCategory]?.[size]?.[m]?.read))
+            data: activeSizeKeys.map(size => {
+                const entry = latestData[dataCategory]?.[size]?.[m];
+                return (entry && entry.errors?.read === 0) ? mapVal(entry.read) : null;
+            })
+        });
+        datasetsU.push({
+            label: compareData ? `${m} (A)` : m,
+            borderColor: color.border,
+            backgroundColor: color.main,
+            tension: 0.3,
+            data: activeSizeKeys.map(size => {
+                const entry = latestData[dataCategory]?.[size]?.[m];
+                return (entry && entry.errors?.update === 0) ? mapVal(entry.update) : null;
+            })
+        });
+        datasetsD.push({
+            label: compareData ? `${m} (A)` : m,
+            borderColor: color.border,
+            backgroundColor: color.main,
+            tension: 0.3,
+            data: activeSizeKeys.map(size => {
+                const entry = latestData[dataCategory]?.[size]?.[m];
+                return (entry && entry.errors?.delete === 0) ? mapVal(entry.delete) : null;
+            })
         });
 
-        // Session B
+        // Session B (Skipping details for brevity, but ensuring color consistency)
         if (compareData) {
             datasetsW.push({
                 label: `${m} (B)`,
-                borderColor: COLORS[i % COLORS.length].border,
+                borderColor: color.border,
                 backgroundColor: 'transparent',
                 borderDash: [5, 5],
                 tension: 0.3,
-                data: activeSizeKeys.map(size => mapVal(compareData[dataCategory]?.[size]?.[m]?.insert))
+                data: activeSizeKeys.map(size => {
+                    const entry = compareData[dataCategory]?.[size]?.[m];
+                    return (entry && entry.errors?.insert === 0) ? mapVal(entry.insert) : null;
+                })
             });
             datasetsR.push({
                 label: `${m} (B)`,
-                borderColor: COLORS[i % COLORS.length].border,
+                borderColor: color.border,
                 backgroundColor: 'transparent',
                 borderDash: [5, 5],
                 tension: 0.3,
-                data: activeSizeKeys.map(size => mapVal(compareData[dataCategory]?.[size]?.[m]?.read))
+                data: activeSizeKeys.map(size => {
+                    const entry = compareData[dataCategory]?.[size]?.[m];
+                    return (entry && entry.errors?.read === 0) ? mapVal(entry.read) : null;
+                })
+            });
+            datasetsU.push({
+                label: `${m} (B)`,
+                borderColor: color.border,
+                backgroundColor: 'transparent',
+                borderDash: [5, 5],
+                tension: 0.3,
+                data: activeSizeKeys.map(size => {
+                    const entry = compareData[dataCategory]?.[size]?.[m];
+                    return (entry && entry.errors?.update === 0) ? mapVal(entry.update) : null;
+                })
+            });
+            datasetsD.push({
+                label: `${m} (B)`,
+                borderColor: color.border,
+                backgroundColor: 'transparent',
+                borderDash: [5, 5],
+                tension: 0.3,
+                data: activeSizeKeys.map(size => {
+                    const entry = compareData[dataCategory]?.[size]?.[m];
+                    return (entry && entry.errors?.delete === 0) ? mapVal(entry.delete) : null;
+                })
             });
         }
     });
 
     writeChart.data.datasets = datasetsW;
     readChart.data.datasets = datasetsR;
+    updateChart.data.datasets = datasetsU;
+    deleteChart.data.datasets = datasetsD;
 
     writeChart.update();
     readChart.update();
+    updateChart.update();
+    deleteChart.update();
 
     renderCustomLegend(`${category}-write`, writeChart);
     renderCustomLegend(`${category}-read`, readChart);
+    renderCustomLegend(`${category}-update`, updateChart);
+    renderCustomLegend(`${category}-delete`, deleteChart);
 
     const hasData = activeSizeKeys.length > 0;
     updateChartVisibility(`${category}-write`, hasData);
     updateChartVisibility(`${category}-read`, hasData);
+    updateChartVisibility(`${category}-update`, hasData);
+    updateChartVisibility(`${category}-delete`, hasData);
 
     if (hasData) {
         renderStorageTable(`table-${category}-write`, activeSizeKeys, members, latestData, dataCategory as 'low' | 'high', 'insert');
         renderStorageTable(`table-${category}-read`, activeSizeKeys, members, latestData, dataCategory as 'low' | 'high', 'read');
+        renderStorageTable(`table-${category}-update`, activeSizeKeys, members, latestData, dataCategory as 'low' | 'high', 'update');
+        renderStorageTable(`table-${category}-delete`, activeSizeKeys, members, latestData, dataCategory as 'low' | 'high', 'delete');
     }
 }
 
@@ -369,6 +463,9 @@ export function updateSummaryDashboard(latestData: BenchmarkData) {
     let bestCompressTech = '--';
     let totalTime = 0;
 
+    let totalOps = 0;
+    let failedOps = 0;
+
     // Evaluate Storage (low, high)
     const storageCats: ('low' | 'high')[] = ['low', 'high'];
     const skipList = ['Cookie', 'SessionStorage', 'LocalStorage', 'store.js'];
@@ -378,22 +475,34 @@ export function updateSummaryDashboard(latestData: BenchmarkData) {
         for (const size of Object.keys(latestData[cat])) {
             const sizeData = latestData[cat][size];
             for (const tech of Object.keys(sizeData)) {
-                if (sizeData[tech].insert > 0) {
-                    totalTime += sizeData[tech].insert;
-                    if (!skipList.includes(tech) && sizeData[tech].insert < bestWrite) {
-                        bestWrite = sizeData[tech].insert;
+                const entry = sizeData[tech];
+                const iterations = entry.iterations || 1;
+
+                // Track Ops & Failures
+                const ops: ('insert' | 'read' | 'update' | 'delete')[] = ['insert', 'read', 'update', 'delete'];
+                ops.forEach(op => {
+                    if (entry[op] !== undefined) {
+                        totalOps += iterations;
+                        failedOps += (entry.errors?.[op] || 0);
+                    }
+                });
+
+                if (entry.insert > 0 && entry.errors?.insert === 0) {
+                    totalTime += entry.insert;
+                    if (!skipList.includes(tech) && entry.insert < bestWrite) {
+                        bestWrite = entry.insert;
                         bestWriteTech = tech;
                     }
                 }
-                if (sizeData[tech].read > 0) {
-                    totalTime += sizeData[tech].read;
-                    if (!skipList.includes(tech) && sizeData[tech].read < bestRead) {
-                        bestRead = sizeData[tech].read;
+                if (entry.read > 0 && entry.errors?.read === 0) {
+                    totalTime += entry.read;
+                    if (!skipList.includes(tech) && entry.read < bestRead) {
+                        bestRead = entry.read;
                         bestReadTech = tech;
                     }
                 }
-                if (sizeData[tech].update && sizeData[tech].update > 0) totalTime += sizeData[tech].update;
-                if (sizeData[tech].delete && sizeData[tech].delete > 0) totalTime += sizeData[tech].delete;
+                if (entry.update > 0 && entry.errors?.update === 0) totalTime += entry.update;
+                if (entry.delete > 0 && entry.errors?.delete === 0) totalTime += entry.delete;
             }
         }
     }
@@ -403,14 +512,22 @@ export function updateSummaryDashboard(latestData: BenchmarkData) {
         for (const size of Object.keys(latestData.compression)) {
             const sizeData = latestData.compression[size];
             for (const tech of Object.keys(sizeData)) {
-                if (sizeData[tech].compressTime > 0) totalTime += sizeData[tech].compressTime;
-                if (sizeData[tech].ratio > bestCompressRatio) {
-                    bestCompressRatio = sizeData[tech].ratio;
-                    bestCompressTech = tech;
+                const entry = sizeData[tech];
+                if (entry.compressTime > 0) {
+                    totalOps++;
+                    if (!entry.valid || entry.errors > 0) failedOps++;
+
+                    totalTime += entry.compressTime;
+                    if (entry.ratio > bestCompressRatio && entry.valid) {
+                        bestCompressRatio = entry.ratio;
+                        bestCompressTech = tech;
+                    }
                 }
             }
         }
     }
+
+    const failureRate = totalOps > 0 ? (failedOps / totalOps) * 100 : 0;
 
     if (summaryBestWrite) {
         if (bestWrite !== Infinity) {
@@ -440,10 +557,18 @@ export function updateSummaryDashboard(latestData: BenchmarkData) {
         }
     }
     if (summaryTotalTime) {
-        if (totalTime > 0) {
-            summaryTotalTime.innerText = totalTime >= 1000 ? (totalTime / 1000).toFixed(1) + 's' : totalTime.toFixed(0) + 'ms';
+        if (totalOps > 0) {
+            const timeStr = totalTime >= 1000 ? (totalTime / 1000).toFixed(1) + 's' : totalTime.toFixed(0) + 'ms';
+            const rateStr = failureRate > 0 ? ` (Fail: ${failureRate.toFixed(1)}%)` : '';
+            summaryTotalTime.innerText = timeStr + rateStr;
+            if (failureRate > 0) {
+                summaryTotalTime.style.color = failureRate > 5 ? 'var(--accent-error)' : 'var(--accent-warning)';
+            } else {
+                summaryTotalTime.style.color = '';
+            }
         } else {
             summaryTotalTime.innerText = '--';
+            summaryTotalTime.style.color = '';
         }
     }
 }

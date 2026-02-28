@@ -1,5 +1,5 @@
 import { getBenchmarkById } from '../index';
-import { runTimedWithResult } from '../benchmark';
+import { runCompressionLifecycle, generatePayloadString } from '../benchmark';
 import type { CompressionStepDefinitions } from '../types';
 
 self.onmessage = async (e: MessageEvent) => {
@@ -13,33 +13,15 @@ self.onmessage = async (e: MessageEvent) => {
 
     try {
         const steps = unit.run(sizeName, sizeValue) as CompressionStepDefinitions;
+        const original = generatePayloadString(sizeValue);
 
-        if (steps.setup) await steps.setup();
-
-        // Prime and get compressed size
-        const firstComp = await Promise.resolve(steps.compress());
-        const compSize = firstComp.length;
-
-        // Measure compression time
-        const { time: compressTime } = await runTimedWithResult(() => steps.compress());
-
-        // Measure decompression time
-        const { time: decompressTime } = await runTimedWithResult(() => steps.decompress(firstComp));
-
-        if (steps.teardown) await steps.teardown();
-
-        const ratio = sizeValue / (compSize || 1);
+        const result = await runCompressionLifecycle(sizeValue, steps, original);
 
         self.postMessage({
             type: 'done_compression',
             unitId,
             sizeName,
-            result: {
-                compressTime,
-                decompressTime,
-                ratio,
-                compSize
-            }
+            result
         });
     } catch (err: any) {
         console.error('Compression Worker Error:', err);

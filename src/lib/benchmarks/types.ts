@@ -9,6 +9,14 @@ export interface BenchmarkResult {
     read: number;
     update: number;
     delete: number;
+    // Reliability/Integrity
+    errors: {
+        insert?: number;
+        read?: number;
+        update?: number;
+        delete?: number;
+    };
+    iterations: number;
 }
 
 export interface CompressionResult {
@@ -16,6 +24,9 @@ export interface CompressionResult {
     decompressTime: number;
     ratio: number;
     compSize?: number;
+    // Reliability/Integrity
+    valid: boolean;
+    errors: number;
 }
 
 export interface StorageData {
