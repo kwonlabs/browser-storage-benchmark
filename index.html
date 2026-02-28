@@ -74,176 +74,8 @@
 
       <div class="tech-guide">
         <!-- Low-Capacity Storage Section -->
-        <section class="guide-group">
-          <div class="group-header">
-            <h3>⚡ Volatile Storage</h3>
-            <p>Synchronous storage APIs best suited for lightweight data and configuration, but typically restricted
-              to &lt;10MB.</p>
-          </div>
-          <div class="guide-grid-large">
-            <div class="guide-card">
-              <div class="card-icon">🍪</div>
-              <div class="card-body">
-                <h4>Cookie</h4>
-                <p>Ultra-lightweight data (&lt; 4KB) exchanged via HTTP headers. Best for session tokens and simple
-                  flags.</p>
-              </div>
-            </div>
-            <div class="guide-card">
-              <div class="card-icon">⏱️</div>
-              <div class="card-body">
-                <h4>SessionStorage</h4>
-                <p>Volatile key-value storage tied to the current tab. Fast, synchronous, and automatically cleared on
-                  closure.</p>
-              </div>
-            </div>
-            <div class="guide-card">
-              <div class="card-icon">💾</div>
-              <div class="card-body">
-                <h4>LocalStorage</h4>
-                <p>Persistent key-value storage with a simple API. Limited to ~5MB-10MB and synchronous in nature.</p>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <!-- High-Capacity Storage (Native) Section -->
-        <section class="guide-group">
-          <div class="group-header">
-            <h3>🗄️ Persistent Storage</h3>
-            <p>Built-in browser asynchronous APIs designed for large datasets, binary payloads, and offline
-              capabilities. Storage limits are dynamically managed by the browser and vary by system, typically
-              allowing for several gigabytes or up to 60% of available disk space.</p>
-          </div>
-          <div class="guide-grid-large">
-            <div class="guide-card">
-              <div class="card-icon">🛡️</div>
-              <div class="card-body">
-                <h4>Cache API</h4>
-                <p>Asynchronous storage for Request/Response pairs. Ideal for offline assets and large binary payloads.
-                </p>
-              </div>
-            </div>
-            <div class="guide-card">
-              <div class="card-icon">🗂️</div>
-              <div class="card-body">
-                <h4>IndexedDB</h4>
-                <p>The standard for client-side structured data. Supports transactions, indexes, and large binary blobs.
-                </p>
-              </div>
-            </div>
-            <div class="guide-card">
-              <div class="card-icon">📂</div>
-              <div class="card-body">
-                <h4>OPFS (Async / Sync)</h4>
-                <p>Origin Private File System provides high-speed, direct file I/O within a sandboxed origin
-                  environment. Sync API available in workers.</p>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <!-- Storage Library Section -->
-        <section class="guide-group">
-          <div class="group-header">
-            <h3>📚 Storage Library</h3>
-            <p>Third-party wrappers and embedded databases that abstract native endpoints for enriched
-              functionality. These services share the same storage quotas as the native persistent storage they
-              utilize.</p>
-          </div>
-          <div class="guide-grid-large">
-            <div class="guide-card">
-              <div class="card-icon">💎</div>
-              <div class="card-body">
-                <h4>SQLite (Async / Sync)</h4>
-                <p>The legendary relational database running via WebAssembly. Custom OPFS Virtual File Systems provide
-                  both async and sahpool sync paradigms.</p>
-              </div>
-            </div>
-            <div class="guide-card">
-              <div class="card-icon">⛓️</div>
-              <div class="card-body">
-                <h4>localForage</h4>
-                <p>An asynchronous fallback library (IDB -> WebSQL -> LocalStorage) using a Simple LocalStorage-like
-                  API.</p>
-              </div>
-            </div>
-            <div class="guide-card">
-              <div class="card-icon">⚡</div>
-              <div class="card-body">
-                <h4>Dexie.js</h4>
-                <p>Optimized IndexedDB wrapper providing a fluent API, robust transactions, and easy schema management.
-                </p>
-              </div>
-            </div>
-            <div class="guide-card">
-              <div class="card-icon">🐶</div>
-              <div class="card-body">
-                <h4>PouchDB</h4>
-                <p>An offline-first browser DB that can automatically sync with CouchDB and other remote instances.</p>
-              </div>
-            </div>
-            <div class="guide-card">
-              <div class="card-icon">🛠️</div>
-              <div class="card-body">
-                <h4>store.js</h4>
-                <p>A zero-dependency, synchronous wrapper that picks the best storage (typically LocalStorage) with
-                  a clean, unified API for simpler data models.</p>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <!-- Compression Section -->
-        <section class="guide-group">
-          <div class="group-header">
-            <h3>🗜️ Compression Engines</h3>
-            <p>Algorithms used to reduce payload size before storage or transmission. This benchmark supports both
-              native browser-level compression and advanced third-party libraries integrated via WebAssembly.</p>
-          </div>
-          <div class="guide-grid-large">
-            <div class="guide-card">
-              <div class="card-icon">📦</div>
-              <div class="card-body">
-                <h4>ZIP</h4>
-                <p>A widely used format implemented via the <code>fflate</code> library, balancing compression ratio
-                  and speed. Ideal for multi-file packaging.</p>
-              </div>
-            </div>
-            <div class="guide-card">
-              <div class="card-icon">🌪️</div>
-              <div class="card-body">
-                <h4>Gzip</h4>
-                <p>Utilizes the browser's native <code>CompressionStream</code> API (DEFLATE). Provides zero-overhead
-                  text compression without external dependencies.</p>
-              </div>
-            </div>
-            <div class="guide-card">
-              <div class="card-icon">💨</div>
-              <div class="card-body">
-                <h4>Deflate</h4>
-                <p>The core algorithm for ZIP and Gzip, also supported via <code>CompressionStream</code>. Optimized
-                  for raw performance and low memory footprints.</p>
-              </div>
-            </div>
-            <div class="guide-card">
-              <div class="card-icon">🍞</div>
-              <div class="card-body">
-                <h4>Brotli</h4>
-                <p>A high-ratio algorithm by Google. Implemented here via <code>brotli-wasm</code> to ensure
-                  cross-browser consistency and superior data density.</p>
-              </div>
-            </div>
-            <div class="guide-card">
-              <div class="card-icon">🦖</div>
-              <div class="card-body">
-                <h4>zstd</h4>
-                <p>Meta's real-time compression engine, integrated via WebAssembly (<code>zstd-wasm</code>). Offers
-                  unparalleled speed and flexibility across various compression levels.</p>
-              </div>
-            </div>
-          </div>
-        </section>
+        <!-- Dynamically rendered guides via ui.ts -->
+        <div id="guide-container"></div>
       </div>
     </section>
 
@@ -260,6 +92,9 @@
                   <polygon points="5 3 19 12 5 21 5 3" />
                 </svg>
                 Run
+              </button>
+              <button id="btn-report-cancel" class="btn-cancel btn-outline" style="display: none;">
+                Cancel
               </button>
               <button id="btn-toggle-advanced" class="btn-outline">
                 Advanced <span class="toggle-arrow">▼</span>
@@ -300,16 +135,7 @@
                 <div class="matrix-row">
                   <div class="row-label"><span>Sizes</span></div>
                   <div class="row-content">
-                    <div class="checkbox-list">
-                      <label><input type="checkbox" class="size-check" value="128b" checked> 128B</label>
-                      <label><input type="checkbox" class="size-check" value="1kb" checked> 1K</label>
-                      <label><input type="checkbox" class="size-check" value="10kb" checked> 10K</label>
-                      <label><input type="checkbox" class="size-check" value="100kb" checked> 100K</label>
-                      <label><input type="checkbox" class="size-check" value="1mb" checked> 1M</label>
-                      <label><input type="checkbox" class="size-check" value="10mb" checked> 10M</label>
-                      <label class="warning-label"><input type="checkbox" class="size-check" value="100mb">
-                        100M*</label>
-                      <label class="warning-label"><input type="checkbox" class="size-check" value="1gb"> 1G*</label>
+                    <div class="checkbox-list" id="size-checks-container">
                     </div>
                   </div>
                   <div class="row-ops-inline">

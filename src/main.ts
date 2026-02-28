@@ -1,15 +1,13 @@
 import './style.css';
-import { SIZES } from './constants';
-import type { TaskDef } from './types';
+import { SIZES, DEFAULT_TASKS } from './lib/benchmarks/constants';
 import { initRouter, handleRouting } from './router';
 import { addLog, initCharts, initUIListeners, updateTrendCharts, btnReportRun } from './ui';
-import { startBenchmark, latestData, setLatestData } from './runner';
+import { latestData, setLatestData, startBenchmark, cancelBenchmark } from './lib/benchmarks/runner';
 import { getLatestSession } from './lib/db';
 import { applyThemeToChart } from './lib/charts';
 import { chartRegistry } from './ui';
 
 // DOM Elements
-const btnRunAll = document.getElementById('btn-run-all') as HTMLButtonElement;
 const btnToggleAdvanced = document.getElementById('btn-toggle-advanced') as HTMLAnchorElement;
 const advancedPanel = document.getElementById('advanced-controller') as HTMLDivElement;
 const btnExport = document.getElementById('btn-export-json') as HTMLButtonElement;
@@ -107,44 +105,34 @@ btnSizeDefault.addEventListener('click', () => {
   sizeChecks.forEach(c => c.checked = defaults.includes(c.value));
 });
 
-// Benchmark Runners
-function runBenchmarkFromUI(isAdvanced: boolean) {
-  let selectedCats: string[];
-  let selectedSizes: string[];
+const btnRunAll = document.getElementById('btn-run-all') as HTMLButtonElement;
+const btnReportCancel = document.getElementById('btn-report-cancel') as HTMLButtonElement;
 
-  if (isAdvanced) {
-    selectedCats = Array.from(categoryChecks).filter(c => c.checked).map(c => c.value);
-    selectedSizes = Array.from(sizeChecks).filter(c => c.checked).map(c => c.value);
+btnRunAll.addEventListener('click', () => {
+  startBenchmark(DEFAULT_TASKS);
+});
 
-    if (selectedCats.length === 0 || selectedSizes.length === 0) {
-      alert('Select at least one category and size.');
-      return;
-    }
+btnReportRun.addEventListener('click', () => {
+  const categories = Array.from(categoryChecks).filter(c => c.checked).map(c => c.value);
+  const sizes = Array.from(sizeChecks).filter(c => c.checked).map(c => ({ name: c.value, val: SIZES[c.value as keyof typeof SIZES] }));
 
-    const hasLarge = selectedSizes.some(s => s === '100mb' || s === '1gb');
-    if (hasLarge) {
-      if (!confirm('Benchmark with 100MB+ data may freeze the browser. Proceed?')) return;
-    }
-
-    advancedPanel.style.display = 'none';
-    btnToggleAdvanced.classList.remove('toggle-active');
-  } else {
-    selectedCats = ['low', 'high-native', 'high-wrapper'];
-    selectedSizes = ['128b', '1kb', '10kb', '100kb', '1mb', '10mb'];
+  if (categories.length === 0 || sizes.length === 0) {
+    addLog('Please select at least one target and one size.', 'error');
+    return;
   }
 
-  const tasks: TaskDef[] = [];
-  selectedSizes.forEach(s => selectedCats.forEach(c => tasks.push({
-    category: c,
-    sizeName: s,
-    sizeValue: SIZES[s as keyof typeof SIZES]
-  })));
-
+  const tasks = [];
+  for (const size of sizes) {
+    for (const cat of categories) {
+      tasks.push({ category: cat, sizeName: size.name, sizeValue: size.val });
+    }
+  }
   startBenchmark(tasks);
-}
+});
 
-btnReportRun.addEventListener('click', () => runBenchmarkFromUI(true));
-btnRunAll.addEventListener('click', () => runBenchmarkFromUI(false));
+btnReportCancel?.addEventListener('click', () => {
+  cancelBenchmark();
+});
 
 // Import / Export
 btnExport.addEventListener('click', () => {

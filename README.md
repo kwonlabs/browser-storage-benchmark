@@ -45,7 +45,7 @@ The suite evaluates storage scalability by running tasks across a standard paylo
 
 ### Prerequisites
 - Node.js (v18+)
-- npm / yarn / pnpm
+- npm / yarn / pnpm / bun
 
 ### Installation
 ```bash
@@ -75,6 +75,3 @@ npm run build
 ## 🛡️ License
 
 Distributed under the MIT License. See `LICENSE` for more information.
-
----
-Created by **KwonMinchul Computer Labs, LLC.**

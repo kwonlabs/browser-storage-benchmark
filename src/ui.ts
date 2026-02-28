@@ -1,9 +1,9 @@
 import { createTrendChart, COLORS, mapVal } from './lib/charts';
-import { SIZES } from './constants';
-import type { BenchmarkData } from './types';
+import { SIZES } from './lib/benchmarks/constants';
+import type { BenchmarkData } from './lib/benchmarks/types';
 import { switchToTab } from './router';
 import { saveSession, getAllSessions, deleteSession, clearAllSessions } from './lib/db';
-import { setLatestData } from './runner';
+import { setLatestData } from './lib/benchmarks/runner';
 
 // Comparison State
 let isCompareMode = false;

@@ -4,7 +4,7 @@ const DB_NAME = 'BenchmarkDB';
 const STORE_NAME = 'sessions';
 const VERSION = 1;
 
-import type { BenchmarkData, EnvironmentMetadata } from '../types';
+import type { BenchmarkData, EnvironmentMetadata } from './benchmarks/types';
 
 export interface BenchmarkSession {
     id: number; // timestamp
