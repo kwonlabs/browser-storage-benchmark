@@ -1,5 +1,4 @@
 import type { BenchmarkUnit, StorageStepDefinitions } from '../../types';
-import { generatePayloadString } from '../../benchmark';
 
 export const opfsAsyncBenchmark: BenchmarkUnit = {
     id: 'opfs-async',
@@ -8,33 +7,41 @@ export const opfsAsyncBenchmark: BenchmarkUnit = {
     icon: '📂',
     category: 'high-native',
     runType: 'worker.async',
-    run: (sizeName: string, sizeValue: number): StorageStepDefinitions => {
-        const fileName = `bench-file-async-${sizeName}`;
-        const str = generatePayloadString(sizeValue);
-        const modStr = str + 'modified';
+    run: (sizeName: string, _sizeValue: number, payloads: { original: string; modified: string }): StorageStepDefinitions => {
+        const fileName = `bench_opfs_async_${sizeName}_${Math.random().toString(36).slice(2, 7)}.txt`;
         let root: FileSystemDirectoryHandle;
-        let fileHandle: FileSystemFileHandle;
 
         return {
             setup: async () => {
                 root = await navigator.storage.getDirectory();
-                fileHandle = await root.getFileHandle(fileName, { create: true });
             },
             insert: async () => {
-                const writable = await fileHandle.createWritable();
-                await writable.write(str as any);
+                const file = await root.getFileHandle(fileName, { create: true });
+                const writable = await file.createWritable();
+                await writable.write(payloads.original);
                 await writable.close();
             },
             read: async () => {
-                const file = await fileHandle.getFile();
-                await file.text();
+                try {
+                    const fileHandle = await root.getFileHandle(fileName);
+                    const file = await fileHandle.getFile();
+                    return await file.text();
+                } catch (e) {
+                    return null;
+                }
             },
             update: async () => {
-                const writable = await fileHandle.createWritable();
-                await writable.write(modStr as any);
+                const file = await root.getFileHandle(fileName);
+                const writable = await file.createWritable();
+                await writable.write(payloads.modified);
                 await writable.close();
             },
-            delete: () => root.removeEntry(fileName).catch(() => { })
+            delete: () => root.removeEntry(fileName).catch(() => { }),
+            teardown: async () => {
+                try {
+                    await root.removeEntry(fileName, { recursive: true });
+                } catch (e) { }
+            }
         };
     }
 };

@@ -1,34 +1,44 @@
 // @ts-ignore
 import PouchDB from 'pouchdb-browser';
 import type { BenchmarkUnit, StorageStepDefinitions } from '../../types';
-import { generatePayloadString } from '../../benchmark';
 
-export const pouchDbBenchmark: BenchmarkUnit = {
+export const pouchDBBenchmark: BenchmarkUnit = {
     id: 'pouchdb',
     name: 'PouchDB',
-    description: 'A CouchDB-compatible database that runs in the browser. Supports sync with remote CouchDB and complex queries.',
-    icon: '🎛️',
+    description: 'An open-source JavaScript database inspired by Apache CouchDB that is designed to run well within the browser.',
+    icon: '📭',
     category: 'high-wrapper',
-    runType: 'worker.async',
-    run: (sizeName: string, sizeValue: number): StorageStepDefinitions => {
-        const dbName = `bench_pouch_${sizeName}`;
-        const str = generatePayloadString(sizeValue);
-        const modStr = str + 'm';
+    runType: 'main.async',
+    run: (sizeName: string, _sizeValue: number, payloads: { original: string; modified: string }): StorageStepDefinitions => {
+        const dbName = `bench_pouch_${sizeName}_${Math.random().toString(36).slice(2, 7)}`;
         let db: any;
-
         return {
             setup: async () => {
-                db = new (PouchDB as any)(dbName);
+                db = new PouchDB(dbName);
             },
-            insert: () => db.put({ _id: 'k', val: str }),
-            read: () => db.get('k'),
+            insert: async () => {
+                try {
+                    const existing = await db.get('k');
+                    await db.put({ _id: 'k', _rev: existing._rev, val: payloads.original });
+                } catch (e) {
+                    await db.put({ _id: 'k', val: payloads.original });
+                }
+            },
+            read: async () => {
+                try {
+                    const doc = await db.get('k');
+                    return doc?.val || null;
+                } catch (e) {
+                    return null;
+                }
+            },
             update: async () => {
                 const doc = await db.get('k');
-                return db.put({ ...doc, val: modStr });
+                await db.put({ ...doc, val: payloads.modified });
             },
             delete: async () => {
                 const doc = await db.get('k');
-                return db.remove(doc);
+                await db.remove(doc);
             },
             teardown: async () => {
                 await db.destroy();

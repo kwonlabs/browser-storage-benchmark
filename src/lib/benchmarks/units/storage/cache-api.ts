@@ -1,5 +1,4 @@
 import type { BenchmarkUnit, StorageStepDefinitions } from '../../types';
-import { generatePayloadString } from '../../benchmark';
 
 export const cacheApiBenchmark: BenchmarkUnit = {
     id: 'cacheapi',
@@ -8,19 +7,17 @@ export const cacheApiBenchmark: BenchmarkUnit = {
     icon: '📦',
     category: 'high-native',
     runType: 'worker.async',
-    run: (sizeName: string, sizeValue: number): StorageStepDefinitions => {
+    run: (sizeName: string, _sizeValue: number, payloads: { original: string; modified: string }): StorageStepDefinitions => {
         const url = `/bench-data-${sizeName}`;
-        const str = generatePayloadString(sizeValue);
-        const modStr = str + 'modified';
         let cache: Cache;
 
         return {
             setup: async () => {
                 cache = await caches.open('bench-cache');
             },
-            insert: () => cache.put(url, new Response(str)),
+            insert: () => cache.put(url, new Response(payloads.original)),
             read: () => cache.match(url).then(r => r?.text()),
-            update: () => cache.put(url, new Response(modStr)),
+            update: () => cache.put(url, new Response(payloads.modified)),
             delete: () => cache.delete(url)
         };
     }

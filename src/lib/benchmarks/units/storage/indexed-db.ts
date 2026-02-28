@@ -1,5 +1,4 @@
 import type { BenchmarkUnit, StorageStepDefinitions } from '../../types';
-import { generatePayloadString } from '../../benchmark';
 
 export const indexedDBBenchmark: BenchmarkUnit = {
     id: 'indexeddb',
@@ -8,12 +7,10 @@ export const indexedDBBenchmark: BenchmarkUnit = {
     icon: '🗂️',
     category: 'high-native',
     runType: 'worker.async',
-    run: (sizeName: string, sizeValue: number): StorageStepDefinitions => {
+    run: (sizeName: string, _sizeValue: number, payloads: { original: string; modified: string }): StorageStepDefinitions => {
         const dbName = 'bench-idb';
         const storeName = 'data';
         const key = `bench_k_${sizeName}`;
-        const str = generatePayloadString(sizeValue);
-        const modStr = str + 'm';
         let db: IDBDatabase;
 
         const runReq = (req: IDBRequest) => new Promise((resolve, reject) => {
@@ -32,7 +29,7 @@ export const indexedDBBenchmark: BenchmarkUnit = {
             },
             insert: () => {
                 const tx = db.transaction(storeName, 'readwrite');
-                return runReq(tx.objectStore(storeName).put(str, key));
+                return runReq(tx.objectStore(storeName).put(payloads.original, key));
             },
             read: () => {
                 const tx = db.transaction(storeName, 'readonly');
@@ -40,7 +37,7 @@ export const indexedDBBenchmark: BenchmarkUnit = {
             },
             update: () => {
                 const tx = db.transaction(storeName, 'readwrite');
-                return runReq(tx.objectStore(storeName).put(modStr, key));
+                return runReq(tx.objectStore(storeName).put(payloads.modified, key));
             },
             delete: () => {
                 const tx = db.transaction(storeName, 'readwrite');

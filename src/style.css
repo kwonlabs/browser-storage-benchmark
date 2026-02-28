@@ -18,7 +18,8 @@
   --glass-strong: rgba(255, 255, 255, 0.9);
   --border-color: rgba(148, 163, 184, 0.2);
   --text-main: #0f172a;
-  --text-muted: #64748b;
+  --text-muted: #475569;
+  /* Darker muted text for light mode */
   --shadow-premium: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
 }
 
@@ -415,28 +416,34 @@ main {
   color: var(--text-main);
 }
 
-.checkbox-list {
+.checkbox-list,
+.radio-list {
   display: flex;
   flex-wrap: wrap;
-  gap: 1rem;
+  gap: 0.8rem 1.2rem;
 }
 
-.checkbox-list label {
+.checkbox-list label,
+.radio-list label {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  font-size: 0.9rem;
-  font-weight: 500;
+  gap: 0.4rem;
+  font-size: 0.85rem;
   cursor: pointer;
-  background: var(--bg-color);
-  padding: 0.5rem 1rem;
-  border-radius: 8px;
-  border: 1px solid var(--border-color);
-  transition: all 0.2s;
+  white-space: nowrap;
+  transition: opacity 0.2s;
 }
 
-.checkbox-list label:hover {
-  border-color: var(--accent-primary);
+.checkbox-list label:hover,
+.radio-list label:hover {
+  opacity: 0.8;
+}
+
+.checkbox-list input,
+.radio-list input {
+  width: 14px;
+  height: 14px;
+  cursor: pointer;
 }
 
 .checkbox-list label:has(input:checked) {
@@ -716,9 +723,39 @@ main {
 
 .trend-layout {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
-  gap: 2rem;
-  margin-top: 1.5rem;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.trend-layout-storage {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.trend-layout-vertical {
+  display: flex;
+  flex-direction: column;
+  gap: 3rem;
+}
+
+.payload-chart-group {
+  border-top: 1px solid var(--border-color);
+  padding-top: 2rem;
+}
+
+.payload-group-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin-bottom: 1.5rem;
+  color: var(--accent-main);
+}
+
+.payload-table-container {
+  margin-top: 1rem;
+  overflow-x: auto;
 }
 
 .report-chart-item::before {
@@ -857,8 +894,11 @@ main {
   overflow-x: auto;
   border-radius: 12px;
   border: 1px solid var(--border-color);
-  background: rgba(0, 0, 0, 0.3);
+  background: var(--bg-card);
+  /* Use variable instead of hardcoded dark color */
+  backdrop-filter: blur(8px);
   scrollbar-width: thin;
+  box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.02);
 }
 
 .data-table {
@@ -870,8 +910,8 @@ main {
 
 .data-table th,
 .data-table td {
-  padding: 0.6rem 1rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--border-color);
   white-space: nowrap;
 }
 
@@ -881,9 +921,10 @@ main {
 }
 
 .data-table th {
-  background: rgba(255, 255, 255, 0.03);
+  background: var(--bg-hover);
   font-weight: 700;
-  color: var(--text-muted);
+  color: var(--text-main);
+  border-bottom: 2px solid var(--border-color);
 }
 
 .data-table tbody tr:hover {
@@ -892,6 +933,26 @@ main {
 
 .data-table tbody tr:last-child td {
   border-bottom: none;
+}
+
+/* Light Theme Overrides for Data Table */
+:root[data-theme="light"] .data-table th {
+  background: #f1f5f9;
+  color: #1e293b;
+  border-bottom: 2px solid #cbd5e1;
+}
+
+:root[data-theme="light"] .data-table td {
+  border-bottom: 1px solid #f1f5f9;
+  color: #334155;
+}
+
+:root[data-theme="light"] .data-table tr:hover {
+  background: #f8fafc;
+}
+
+:root[data-theme="light"] .data-table tr:nth-child(even) {
+  background: rgba(241, 245, 249, 0.5);
 }
 
 /* History Panel - Premium Sidebar */
@@ -1394,7 +1455,8 @@ footer {
     justify-content: flex-start;
   }
 
-  .trend-layout {
+  .trend-layout,
+  .trend-layout-storage {
     grid-template-columns: 1fr;
   }
 

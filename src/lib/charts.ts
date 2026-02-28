@@ -45,9 +45,11 @@ export function getTrendOptions() {
                     color: textMuted,
                     font: { family: 'Inter', size: 10 },
                     callback: function (value: any) {
-                        if (value >= 1000) return (value / 1000).toFixed(0) + 's';
-                        if (value >= 1) return value.toFixed(0) + 'ms';
-                        return value.toFixed(3) + 'ms';
+                        const num = typeof value === 'number' ? value : parseFloat(value);
+                        if (isNaN(num)) return value;
+                        if (num >= 1000) return (num / 1000).toFixed(0) + 's';
+                        if (num >= 1) return num.toFixed(0) + 'ms';
+                        return num.toFixed(3) + 'ms';
                     }
                 }
             }
@@ -72,8 +74,14 @@ export function getTrendOptions() {
                         if (label) label += ': ';
                         if (context.parsed.y !== null) {
                             const val = context.parsed.y;
-                            label += val < 1 ? val.toFixed(4) : val.toFixed(2);
-                            label += (context.dataset.yAxisID === 'yRatio' ? 'x' : ' ms');
+                            const isRatioChart = context.chart.options.scales?.y?.ticks?.callback?.(1)?.includes('%');
+
+                            if (isRatioChart) {
+                                label += (typeof val === 'number' ? val.toFixed(2) : val) + '%';
+                            } else {
+                                label += (typeof val === 'number' ? (val < 1 ? val.toFixed(4) : val.toFixed(2)) : val);
+                                label += ' ms';
+                            }
                         }
                         return label;
                     }
@@ -82,6 +90,17 @@ export function getTrendOptions() {
         }
     } as any;
 }
+
+export const DASH_PATTERNS = [
+    [],              // Solid
+    [5, 5],          // Dashed
+    [2, 2],          // Dotted
+    [10, 5],         // Long dash
+    [5, 2, 2, 2],    // Dash-dot
+    [15, 3, 3, 3],   // Very long dash-dot
+    [1, 5],          // Sparse dots
+    [10, 2, 2, 2, 2, 2], // Complex pattern (modified from 8 to 10)
+];
 
 export function mapVal(v: any) {
     if (v === -1 || v === -2 || v === undefined || v === null) return null;
@@ -93,7 +112,7 @@ export function createTrendChart(canvas: HTMLCanvasElement, title: string, yLabe
     const options = getTrendOptions();
 
     options.plugins.title = {
-        display: true,
+        display: !!title,
         text: title,
         color: textMain,
         font: { family: 'Outfit', size: 16, weight: '800' },
@@ -103,9 +122,9 @@ export function createTrendChart(canvas: HTMLCanvasElement, title: string, yLabe
 
     if (isRatio) {
         options.scales.y.type = 'linear';
-        options.scales.y.beginAtZero = false;
-        options.scales.y.min = 0;
-        options.scales.y.ticks.callback = (v: any) => v.toFixed(1) + 'x';
+        options.scales.y.beginAtZero = true;
+        options.scales.y.title.text = 'Compression Ratio (%)';
+        options.scales.y.ticks.callback = (v: any) => typeof v === 'number' ? v.toFixed(0) + '%' : v;
     }
 
     return new Chart(canvas, {
@@ -115,7 +134,8 @@ export function createTrendChart(canvas: HTMLCanvasElement, title: string, yLabe
     });
 }
 
-export function applyThemeToChart(chart: Chart) {
+export function applyThemeToChart(chart: any) {
+    if (!chart || !chart.options) return;
     const options = getTrendOptions();
     const textMain = getCssVar('--text-main') || '#f8fafc';
 
@@ -133,7 +153,9 @@ export function applyThemeToChart(chart: Chart) {
         yScale.ticks = { ...yScale.ticks, ...options.scales.y.ticks };
         if (yScale.title) yScale.title.color = options.scales.y.title.color;
     }
-    if (chart.options.plugins?.legend?.labels) chart.options.plugins.legend.labels.color = options.plugins.legend.labels.color;
+    if (chart.options.plugins?.legend?.labels && options.plugins?.legend?.labels) {
+        chart.options.plugins.legend.labels.color = options.plugins.legend.labels.color;
+    }
     if (chart.options.plugins?.tooltip) {
         chart.options.plugins.tooltip.backgroundColor = options.plugins.tooltip.backgroundColor;
         chart.options.plugins.tooltip.titleColor = options.plugins.tooltip.titleColor;

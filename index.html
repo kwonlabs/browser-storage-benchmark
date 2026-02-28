@@ -144,6 +144,24 @@
                     <button class="btn-text-mini" id="size-none">None</button>
                   </div>
                 </div>
+                <div class="matrix-row">
+                  <div class="row-label"><span>Data Type</span></div>
+                  <div class="row-content">
+                    <div class="checkbox-list">
+                      <label><input type="checkbox" class="payload-check" value="text" checked> Document (Text)</label>
+                      <label><input type="checkbox" class="payload-check" value="json" checked> Structured
+                        (JSON)</label>
+                      <label><input type="checkbox" class="payload-check" value="random" checked> Text Random</label>
+                      <label><input type="checkbox" class="payload-check" value="binary" checked> Binary (Raw)</label>
+                      <label><input type="checkbox" class="payload-check" value="image" checked> Image (Binary)</label>
+                      <label><input type="checkbox" class="payload-check" value="pdf" checked> PDF (Mixed)</label>
+                    </div>
+                  </div>
+                  <div class="row-ops-inline">
+                    <button class="btn-text-mini" id="payload-all">All</button>
+                    <button class="btn-text-mini" id="payload-none">None</button>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -244,7 +262,7 @@
         <div class="report-grid">
           <div class="report-section">
             <h3 class="section-title">⚡ Volatile Storage Trends</h3>
-            <div class="trend-layout">
+            <div class="trend-layout-storage">
               <div class="report-chart-item" id="item-low-write">
                 <div class="empty-state" id="empty-low-write">No data available.<br><small>Run Benchmark to see
                     results.</small></div>
@@ -289,7 +307,7 @@
           </div>
           <div class="report-section">
             <h3 class="section-title">🗄️ Persistent Storage Trends</h3>
-            <div class="trend-layout">
+            <div class="trend-layout-storage">
               <div class="report-chart-item" id="item-high-native-write">
                 <div class="empty-state" id="empty-high-native-write">No data available.<br><small>Run Benchmark to see
                     results.</small></div>
@@ -334,7 +352,7 @@
           </div>
           <div class="report-section">
             <h3 class="section-title">📚 Persistent Library Trends</h3>
-            <div class="trend-layout">
+            <div class="trend-layout-storage">
               <div class="report-chart-item" id="item-high-wrapper-write">
                 <div class="empty-state" id="empty-high-wrapper-write">No data available.<br><small>Run Benchmark to see
                     results.</small></div>
@@ -379,7 +397,8 @@
           </div>
           <div class="report-section">
             <h3 class="section-title">🗜️ Compression Efficiency Trends</h3>
-            <div class="trend-layout">
+            <div id="compression-charts-container" class="trend-layout-vertical">
+              <!-- Charts will be dynamically injected here per Payload Type -->
               <div class="report-chart-item" id="item-compression-speed">
                 <div class="empty-state" id="empty-compression-speed">No data available.<br><small>Run Benchmark to see
                     results.</small></div>
@@ -389,6 +408,16 @@
                     class="btn-text-mini btn-toggle-table" data-target="table-compression-speed">Show Data Table
                     ▼</button></div>
                 <div class="data-table-container" id="table-compression-speed" style="display: none;"></div>
+              </div>
+              <div class="report-chart-item" id="item-compression-decompress">
+                <div class="empty-state" id="empty-compression-decompress">No data available.<br><small>Run Benchmark to
+                    see results.</small></div>
+                <div class="chart-wrapper" id="wrap-compression-decompress" style="display: none;"><canvas
+                    id="chart-trend-compression-decompress"></canvas></div>
+                <div class="data-table-toggle" id="toggle-compression-decompress" style="display: none;"><button
+                    class="btn-text-mini btn-toggle-table" data-target="table-compression-decompress">Show Data Table
+                    ▼</button></div>
+                <div class="data-table-container" id="table-compression-decompress" style="display: none;"></div>
               </div>
               <div class="report-chart-item" id="item-compression-ratio">
                 <div class="empty-state" id="empty-compression-ratio">No data available.<br><small>Run Benchmark to see

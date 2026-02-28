@@ -1,5 +1,4 @@
 import type { BenchmarkUnit, StorageStepDefinitions } from '../../types';
-import { generatePayloadString } from '../../benchmark';
 
 export const sessionStorageBenchmark: BenchmarkUnit = {
     id: 'sessionstorage',
@@ -8,15 +7,12 @@ export const sessionStorageBenchmark: BenchmarkUnit = {
     icon: '⏳',
     category: 'low',
     runType: 'main.sync',
-    run: (sizeName: string, sizeValue: number): StorageStepDefinitions => {
-        const key = `bench_k_${sizeName}`;
-        const str = generatePayloadString(sizeValue);
-        const modStr = str + 'm';
-
+    run: (sizeName: string, _sizeValue: number, payloads: { original: string; modified: string }): StorageStepDefinitions => {
+        const key = `bench_k_ss_${sizeName}`;
         return {
-            insert: () => sessionStorage.setItem(key, str),
+            insert: () => sessionStorage.setItem(key, payloads.original),
             read: () => sessionStorage.getItem(key),
-            update: () => sessionStorage.setItem(key, modStr),
+            update: () => sessionStorage.setItem(key, payloads.modified),
             delete: () => sessionStorage.removeItem(key)
         };
     }

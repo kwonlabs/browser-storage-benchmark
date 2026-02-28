@@ -1,5 +1,4 @@
 import type { BenchmarkUnit, StorageStepDefinitions } from '../../types';
-import { generatePayloadBuffer } from '../../benchmark';
 
 export const opfsSyncBenchmark: BenchmarkUnit = {
     id: 'opfs-sync',
@@ -8,39 +7,49 @@ export const opfsSyncBenchmark: BenchmarkUnit = {
     icon: '⚡',
     category: 'high-native',
     runType: 'worker.async',
-    run: (sizeName: string, sizeValue: number): StorageStepDefinitions => {
-        const fileName = `bench-file-sync-${sizeName}`;
-        const strBuf = generatePayloadBuffer(sizeValue);
-        const modStrBuf = generatePayloadBuffer(sizeValue);
+    run: (sizeName: string, _sizeValue: number, payloads: { original: string; modified: string }): StorageStepDefinitions => {
+        const fileName = `bench_opfs_sync_${sizeName}_${Math.random().toString(36).slice(2, 7)}.txt`;
+        let accessHandle: any;
+        const encoder = new TextEncoder();
+        const decoder = new TextDecoder();
         let root: FileSystemDirectoryHandle;
         let fileHandle: FileSystemFileHandle;
 
         return {
             setup: async () => {
-                root = await navigator.storage.getDirectory();
-                fileHandle = await root.getFileHandle(fileName, { create: true });
+                if (!root) {
+                    root = await navigator.storage.getDirectory();
+                    fileHandle = await root.getFileHandle(fileName, { create: true });
+                    accessHandle = await (fileHandle as any).createSyncAccessHandle();
+                }
             },
-            insert: async () => {
-                const accessHandle = await (fileHandle as any).createSyncAccessHandle();
-                accessHandle.write(strBuf);
+            insert: () => {
+                const buf = encoder.encode(payloads.original);
+                accessHandle.truncate(0);
+                accessHandle.write(buf, { at: 0 });
                 accessHandle.flush();
-                accessHandle.close();
             },
             read: async () => {
-                const accessHandle = await (fileHandle as any).createSyncAccessHandle();
                 const size = accessHandle.getSize();
-                const buffer = new DataView(new ArrayBuffer(size));
+                const buffer = new Uint8Array(size);
                 accessHandle.read(buffer, { at: 0 });
-                accessHandle.close();
+                return decoder.decode(buffer);
             },
-            update: async () => {
-                const accessHandle = await (fileHandle as any).createSyncAccessHandle();
+            update: () => {
+                const buf = encoder.encode(payloads.modified);
                 accessHandle.truncate(0);
-                accessHandle.write(modStrBuf);
+                accessHandle.write(buf, { at: 0 });
                 accessHandle.flush();
-                accessHandle.close();
             },
-            delete: () => root.removeEntry(fileName).catch(() => { })
+            delete: () => {
+                accessHandle.truncate(0);
+                accessHandle.flush();
+            },
+            teardown: () => {
+                if (accessHandle) {
+                    accessHandle.close();
+                }
+            }
         };
     }
 };

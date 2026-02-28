@@ -1,5 +1,4 @@
 import type { BenchmarkUnit, StorageStepDefinitions } from '../../types';
-import { generatePayloadString } from '../../benchmark';
 
 export const cookieBenchmark: BenchmarkUnit = {
     id: 'cookie',
@@ -8,22 +7,31 @@ export const cookieBenchmark: BenchmarkUnit = {
     icon: '🍪',
     category: 'low',
     runType: 'main.sync',
-    run: (sizeName: string, sizeValue: number): StorageStepDefinitions => {
-        const key = `bench_k_${sizeName}`;
-        const str = generatePayloadString(sizeValue);
-        const modStr = str + 'm';
+    run: (sizeName: string, _sizeValue: number, payloads: { original: string; modified: string }): StorageStepDefinitions => {
+        const key = `bench_k_c_${sizeName}_${Math.random().toString(36).slice(2, 7)}`;
+        const COOKIE_LIMIT = 4000; // Safe limit slightly below 4096
 
         return {
             insert: () => {
-                if (sizeValue > 4000) throw new Error('Cookie size limit exceeded (>4KB)');
-                document.cookie = `${key}=${str};path=/;max-age=60`;
+                if (payloads.original.length > COOKIE_LIMIT) {
+                    console.warn(`[Cookie] Size limit exceeded (${payloads.original.length} bytes). Cookies are limited to ~4KB.`);
+                    return -1;
+                }
+                document.cookie = `${key}=${payloads.original}; path=/; samesite=Lax;`;
             },
-            read: () => { void document.cookie; },
+            read: () => {
+                if (payloads.original.length > COOKIE_LIMIT) return null;
+                const parts = document.cookie.split(`${key}=`);
+                if (parts.length === 2) return parts.pop()?.split(';').shift();
+                return null;
+            },
             update: () => {
-                if (sizeValue > 4000) throw new Error('Cookie size limit exceeded (>4KB)');
-                document.cookie = `${key}=${modStr};path=/;max-age=60`;
+                if (payloads.modified.length > COOKIE_LIMIT) return -1;
+                document.cookie = `${key}=${payloads.modified}; path=/; samesite=Lax;`;
             },
-            delete: () => { document.cookie = `${key}=;path=/;max-age=0`; }
+            delete: () => {
+                document.cookie = `${key}=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT;`;
+            }
         };
     }
 };

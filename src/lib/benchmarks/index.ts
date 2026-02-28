@@ -18,7 +18,7 @@ import { sqliteSyncBenchmark } from './units/storage/sqlite-sync';
 import { dexieBenchmark } from './units/storage/dexie';
 import { storeJsBenchmark } from './units/storage/store-js';
 import { localForageBenchmark } from './units/storage/local-forage';
-import { pouchDbBenchmark } from './units/storage/pouch-db';
+import { pouchDBBenchmark } from './units/storage/pouch-db';
 
 import type { BenchmarkUnit } from './types';
 
@@ -34,7 +34,7 @@ export const allBenchmarks: BenchmarkUnit[] = [
     sqliteSyncBenchmark,
     localForageBenchmark,
     dexieBenchmark,
-    pouchDbBenchmark,
+    pouchDBBenchmark,
     storeJsBenchmark,
     zipBenchmark,
     gzipBenchmark,

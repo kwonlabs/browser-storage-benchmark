@@ -1,24 +1,28 @@
-import type { BenchmarkUnit, StorageStepDefinitions } from '../../types';
-import { generatePayloadString } from '../../benchmark';
 import store from 'store2';
+import type { BenchmarkUnit, StorageStepDefinitions } from '../../types';
 
 export const storeJsBenchmark: BenchmarkUnit = {
     id: 'store.js',
     name: 'store.js',
-    description: 'Cross-browser storage wrapper. Falls back to various mechanisms but typically relies on localStorage.',
-    icon: '📦',
+    description: 'Cross-browser storage for all browsers (used to be store.js, now using store2 for better maintenance).',
+    icon: '🏪',
     category: 'high-wrapper',
     runType: 'main.sync',
-    run: (sizeName: string, sizeValue: number): StorageStepDefinitions => {
-        const key = `bench_storejs_${sizeName}`;
-        const str = generatePayloadString(sizeValue);
-        const modStr = str + 'm';
-
+    run: (_sizeName: string, _sizeValue: number, payloads: { original: string; modified: string }): StorageStepDefinitions => {
+        const key = 'bench_k_s2';
         return {
-            insert: () => store.set(key, str),
-            read: () => store.get(key),
-            update: () => store.set(key, modStr),
-            delete: () => store.remove(key)
+            insert: () => {
+                store.set(key, payloads.original);
+            },
+            read: () => {
+                return store.get(key);
+            },
+            update: () => {
+                store.set(key, payloads.modified);
+            },
+            delete: () => {
+                store.remove(key);
+            }
         };
     }
 };

@@ -1,33 +1,52 @@
 import Dexie, { type Table } from 'dexie';
 import type { BenchmarkUnit, StorageStepDefinitions } from '../../types';
-import { generatePayloadString } from '../../benchmark';
 
 export const dexieBenchmark: BenchmarkUnit = {
     id: 'dexie',
     name: 'Dexie.js',
-    description: 'A minimalist wrapper for IndexedDB that provides a neat database-like API with promises and observable queries.',
+    description: 'A minimalist wrapper for IndexedDB that provides a neat database API with better performance and easier usage.',
     icon: '🚀',
     category: 'high-wrapper',
-    runType: 'worker.async',
-    run: (sizeName: string, sizeValue: number): StorageStepDefinitions => {
-        const dbName = `bench_dexie_${sizeName}`;
-        const str = generatePayloadString(sizeValue);
-        const modStr = str + 'm';
+    runType: 'main.async',
+    run: (sizeName: string, _sizeValue: number, payloads: { original: string; modified: string }): StorageStepDefinitions => {
         let db: Dexie;
-        let table: Table;
+        let table: Table<{ id: string; val: string }, string>;
 
         return {
             setup: async () => {
-                db = new Dexie(dbName);
-                db.version(1).stores({ data: 'id' });
-                table = db.table('data');
+                const name = `bench_dexie_${sizeName}_${Math.random().toString(36).slice(2, 7)}`;
+                if (db) {
+                    await db.close();
+                    await Dexie.delete(db.name);
+                }
+                db = new Dexie(name);
+                db.version(1).stores({
+                    bench: 'id'
+                });
+                table = db.table('bench');
+                await db.open();
+                await table.clear();
             },
-            insert: () => table.put({ id: 'k', val: str }),
-            read: () => table.get('k'),
-            update: () => table.put({ id: 'k', val: modStr }),
-            delete: () => table.delete('k'),
+            insert: async () => {
+                await table.put({ id: 'k', val: payloads.original });
+            },
+            read: async () => {
+                const res = await table.get('k');
+                if (!res) return null;
+                return res.val;
+            },
+            update: async () => {
+                await table.update('k', { val: payloads.modified });
+            },
+            delete: async () => {
+                await table.delete('k');
+            },
             teardown: async () => {
-                await db.delete();
+                if (db) {
+                    await db.close();
+                    await Dexie.delete(db.name); // Full cleanup
+                    db = null as any;
+                }
             }
         };
     }

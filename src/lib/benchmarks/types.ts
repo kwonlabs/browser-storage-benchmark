@@ -4,6 +4,8 @@ export interface TaskDef {
     sizeValue: number;
 }
 
+export type PayloadType = 'text' | 'json' | 'random' | 'binary' | 'image' | 'pdf';
+
 export interface BenchmarkResult {
     insert: number;
     read: number;
@@ -23,6 +25,7 @@ export interface CompressionResult {
     compressTime: number;
     decompressTime: number;
     ratio: number;
+    originalSize?: number;
     compSize?: number;
     // Reliability/Integrity
     valid: boolean;
@@ -31,13 +34,17 @@ export interface CompressionResult {
 
 export interface StorageData {
     [sizeName: string]: {
-        [storageName: string]: BenchmarkResult;
+        [payloadType: string]: {
+            [storageName: string]: BenchmarkResult;
+        };
     };
 }
 
 export interface CompressionData {
     [sizeName: string]: {
-        [algorithm: string]: CompressionResult;
+        [payloadType: string]: {
+            [algorithm: string]: CompressionResult;
+        };
     };
 }
 
@@ -72,7 +79,7 @@ export interface BenchmarkUnit {
     icon: string;
     category: 'low' | 'high-native' | 'high-wrapper' | 'compression';
     runType: RunType;
-    run: (sizeName: string, sizeValue: number) => StorageStepDefinitions | CompressionStepDefinitions | any;
+    run: (sizeName: string, sizeValue: number, payloads: { original: string; modified: string }) => StorageStepDefinitions | CompressionStepDefinitions | any;
 }
 
 export interface EnvironmentMetadata {

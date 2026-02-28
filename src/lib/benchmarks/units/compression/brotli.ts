@@ -9,7 +9,7 @@ export const brotliBenchmark: BenchmarkUnit = {
     icon: '🍞',
     category: 'compression',
     runType: 'worker.async',
-    run: (_sizeName: string, sizeValue: number): CompressionStepDefinitions => {
+    run: (_sizeName: string, sizeValue: number, _payloads: { original: string; modified: string }): CompressionStepDefinitions => {
         const payload = generatePayloadBuffer(sizeValue);
         let brotli: any;
 

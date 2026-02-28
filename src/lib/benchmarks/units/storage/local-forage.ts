@@ -1,30 +1,44 @@
 import localforage from 'localforage';
 import type { BenchmarkUnit, StorageStepDefinitions } from '../../types';
-import { generatePayloadString } from '../../benchmark';
 
 export const localForageBenchmark: BenchmarkUnit = {
     id: 'localforage',
     name: 'localForage',
-    description: 'An asynchronous storage library that improves the web app offline experience by using a simple localStorage-like API.',
+    description: 'A fast and simple storage library that uses IndexedDB, WebSQL, or LocalStorage through a simple localStorage-like API.',
     icon: '📦',
     category: 'high-wrapper',
-    runType: 'worker.async',
-    run: (sizeName: string, sizeValue: number): StorageStepDefinitions => {
-        const key = `bench_k_${sizeName}`;
-        const str = generatePayloadString(sizeValue);
-        const modStr = str + 'm';
-        let store: LocalForage;
+    runType: 'main.async',
+    run: (sizeName: string, _sizeValue: number, payloads: { original: string; modified: string }): StorageStepDefinitions => {
+        let lf: LocalForage;
+        const storeName = `bench_lf_${sizeName}_${Math.random().toString(36).slice(2, 7)}`;
 
         return {
             setup: async () => {
-                store = localforage.createInstance({ name: `bench_lf_${sizeName}` });
+                lf = localforage.createInstance({
+                    name: 'bench_lf_db',
+                    storeName: storeName
+                });
+                await lf.clear();
             },
-            insert: () => store.setItem(key, str),
-            read: () => store.getItem(key),
-            update: () => store.setItem(key, modStr),
-            delete: () => store.removeItem(key),
+            insert: async () => {
+                await lf.setItem('k', payloads.original);
+            },
+            read: async () => {
+                return await lf.getItem<string>('k');
+            },
+            update: async () => {
+                await lf.setItem('k', payloads.modified);
+            },
+            delete: async () => {
+                await lf.removeItem('k');
+            },
             teardown: async () => {
-                await store.clear();
+                try {
+                    await lf.dropInstance({
+                        name: 'bench_lf_db',
+                        storeName: storeName
+                    });
+                } catch (e) { }
             }
         };
     }

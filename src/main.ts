@@ -28,6 +28,10 @@ const btnSizeAll = document.getElementById('size-all') as HTMLButtonElement;
 const btnSizeNone = document.getElementById('size-none') as HTMLButtonElement;
 const btnSizeDefault = document.getElementById('size-default') as HTMLButtonElement;
 
+const payloadChecks = document.querySelectorAll('.payload-check') as NodeListOf<HTMLInputElement>;
+const btnPayloadAll = document.getElementById('payload-all') as HTMLButtonElement;
+const btnPayloadNone = document.getElementById('payload-none') as HTMLButtonElement;
+
 // Internal Theme Initialization
 function initThemeToggle() {
   const btnTheme = document.getElementById('btn-theme-toggle') as HTMLButtonElement | null;
@@ -105,16 +109,27 @@ btnSizeDefault.addEventListener('click', () => {
   sizeChecks.forEach(c => c.checked = defaults.includes(c.value));
 });
 
+btnPayloadAll?.addEventListener('click', () => payloadChecks.forEach(c => c.checked = true));
+btnPayloadNone?.addEventListener('click', () => payloadChecks.forEach(c => c.checked = false));
+
 const btnRunAll = document.getElementById('btn-run-all') as HTMLButtonElement;
 const btnReportCancel = document.getElementById('btn-report-cancel') as HTMLButtonElement;
 
+const getSelectedPayloadTypes = () => {
+  const checked = document.querySelectorAll('.payload-check:checked') as NodeListOf<HTMLInputElement>;
+  const types = Array.from(checked).map(c => c.value as any);
+  return types.length > 0 ? types : ['text'];
+};
+
 btnRunAll.addEventListener('click', () => {
-  startBenchmark(DEFAULT_TASKS);
+  const payloadTypes = getSelectedPayloadTypes();
+  startBenchmark(DEFAULT_TASKS, payloadTypes);
 });
 
 btnReportRun.addEventListener('click', () => {
   const categories = Array.from(categoryChecks).filter(c => c.checked).map(c => c.value);
   const sizes = Array.from(sizeChecks).filter(c => c.checked).map(c => ({ name: c.value, val: SIZES[c.value as keyof typeof SIZES] }));
+  const payloadTypes = getSelectedPayloadTypes();
 
   if (categories.length === 0 || sizes.length === 0) {
     addLog('Please select at least one target and one size.', 'error');
@@ -127,7 +142,7 @@ btnReportRun.addEventListener('click', () => {
       tasks.push({ category: cat, sizeName: size.name, sizeValue: size.val });
     }
   }
-  startBenchmark(tasks);
+  startBenchmark(tasks, payloadTypes);
 });
 
 btnReportCancel?.addEventListener('click', () => {
