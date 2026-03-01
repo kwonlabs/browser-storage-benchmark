@@ -8,6 +8,7 @@ export const pouchDBBenchmark: BenchmarkUnit = {
     description: 'An open-source JavaScript database inspired by Apache CouchDB that is designed to run well within the browser.',
     icon: '📭',
     category: 'high-wrapper',
+    url: 'https://pouchdb.com/',
     runType: 'main.async',
     run: (sizeName: string, _sizeValue: number, payloads: { original: string; modified: string }): StorageStepDefinitions => {
         const dbName = `bench_pouch_${sizeName}_${Math.random().toString(36).slice(2, 7)}`;

@@ -2,6 +2,7 @@ import { zipBenchmark } from './units/compression/zip';
 import { gzipBenchmark } from './units/compression/gzip';
 import { zstdBenchmark } from './units/compression/zstd';
 import { deflateBenchmark } from './units/compression/deflate';
+import { deflateRawBenchmark } from './units/compression/deflate-raw';
 import { brotliBenchmark } from './units/compression/brotli';
 
 import { cookieBenchmark } from './units/storage/cookie';
@@ -39,6 +40,7 @@ export const allBenchmarks: BenchmarkUnit[] = [
     zipBenchmark,
     gzipBenchmark,
     deflateBenchmark,
+    deflateRawBenchmark,
     brotliBenchmark,
     zstdBenchmark
 ];

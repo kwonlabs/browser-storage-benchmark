@@ -6,7 +6,8 @@ export const cacheApiBenchmark: BenchmarkUnit = {
     description: 'A system for storing and retrieving network requests and their responses. Part of the Service Worker specification, suitable for large data.',
     icon: '📦',
     category: 'high-native',
-    runType: 'worker.async',
+    url: 'https://w3c.github.io/ServiceWorker/#cache-objects',
+    runType: 'main.async',
     run: (sizeName: string, _sizeValue: number, payloads: { original: string; modified: string }): StorageStepDefinitions => {
         const url = `/bench-data-${sizeName}`;
         let cache: Cache;

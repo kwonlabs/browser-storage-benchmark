@@ -6,6 +6,7 @@ export const sqliteSyncBenchmark: BenchmarkUnit = {
     description: 'SQLite running via WebAssembly with OPFS (Sync Access Handle) support for maximum performance.',
     icon: '🚀',
     category: 'high-wrapper',
+    url: 'https://sqlite.org/wasm',
     runType: 'worker.async',
     run: (sizeName: string, _sizeValue: number, payloads: { original: string; modified: string }): StorageStepDefinitions => {
         const dbPath = `/bench_sync_${sizeName}_${Math.random().toString(36).slice(2, 7)}.sqlite3`;

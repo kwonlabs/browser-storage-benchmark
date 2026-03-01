@@ -6,6 +6,7 @@ export const opfsSyncBenchmark: BenchmarkUnit = {
     description: 'Origin Private File System (Sync API). Designed for use within Web Workers for maximum performance on file operations.',
     icon: '⚡',
     category: 'high-native',
+    url: 'https://fs.spec.whatwg.org/#origin-private-file-system',
     runType: 'worker.async',
     run: (sizeName: string, _sizeValue: number, payloads: { original: string; modified: string }): StorageStepDefinitions => {
         const fileName = `bench_opfs_sync_${sizeName}_${Math.random().toString(36).slice(2, 7)}.txt`;

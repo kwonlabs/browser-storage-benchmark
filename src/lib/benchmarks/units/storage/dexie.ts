@@ -7,6 +7,7 @@ export const dexieBenchmark: BenchmarkUnit = {
     description: 'A minimalist wrapper for IndexedDB that provides a neat database API with better performance and easier usage.',
     icon: '🚀',
     category: 'high-wrapper',
+    url: 'https://dexie.org/',
     runType: 'main.async',
     run: (sizeName: string, _sizeValue: number, payloads: { original: string; modified: string }): StorageStepDefinitions => {
         let db: Dexie;

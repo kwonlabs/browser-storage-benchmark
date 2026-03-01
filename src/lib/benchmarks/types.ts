@@ -78,6 +78,7 @@ export interface BenchmarkUnit {
     description: string;
     icon: string;
     category: 'low' | 'high-native' | 'high-wrapper' | 'compression';
+    url?: string;
     runType: RunType;
     run: (sizeName: string, sizeValue: number, payloads: { original: string; modified: string }) => StorageStepDefinitions | CompressionStepDefinitions | any;
 }

@@ -66,11 +66,12 @@ function renderGuidesHtml() {
           <div class="guide-grid-large">`;
 
     units.forEach(unit => {
+      const linkHtml = unit.url ? `<a href="${unit.url}" target="_blank" class="guide-url" title="Official Documentation" style="font-size: 0.8em; text-decoration: none; margin-left: 0.5rem;">🔗</a>` : '';
       html += `
             <div class="guide-card">
               <div class="card-icon">${unit.icon}</div>
               <div class="card-body">
-                <h4>${unit.name}</h4>
+                <h4>${unit.name}${linkHtml}</h4>
                 <p>${unit.description}</p>
               </div>
             </div>`;

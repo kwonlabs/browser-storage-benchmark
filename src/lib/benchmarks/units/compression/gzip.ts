@@ -7,6 +7,7 @@ export const gzipBenchmark: BenchmarkUnit = {
     description: 'Utilizes the browser\'s native CompressionStream API (DEFLATE). Provides zero-overhead text compression without external dependencies.',
     icon: '🗜️',
     category: 'compression',
+    url: 'https://wicg.github.io/compression/',
     runType: 'worker.async',
     run: (_sizeName: string, sizeValue: number, _payloads: { original: string; modified: string }): CompressionStepDefinitions => {
         const payload = generatePayloadBuffer(sizeValue);

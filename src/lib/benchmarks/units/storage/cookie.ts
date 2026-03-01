@@ -6,6 +6,7 @@ export const cookieBenchmark: BenchmarkUnit = {
     description: 'Traditional browser cookies. Very limited size (4KB) and can impact network performance as they are sent with every request.',
     icon: '🍪',
     category: 'low',
+    url: 'https://httpwg.org/specs/rfc6265.html',
     runType: 'main.sync',
     run: (sizeName: string, _sizeValue: number, payloads: { original: string; modified: string }): StorageStepDefinitions => {
         const key = `bench_k_c_${sizeName}_${Math.random().toString(36).slice(2, 7)}`;

@@ -7,6 +7,7 @@ export const localForageBenchmark: BenchmarkUnit = {
     description: 'A fast and simple storage library that uses IndexedDB, WebSQL, or LocalStorage through a simple localStorage-like API.',
     icon: '📦',
     category: 'high-wrapper',
+    url: 'https://localforage.github.io/localForage/',
     runType: 'main.async',
     run: (sizeName: string, _sizeValue: number, payloads: { original: string; modified: string }): StorageStepDefinitions => {
         let lf: LocalForage;

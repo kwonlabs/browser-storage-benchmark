@@ -6,6 +6,7 @@ export const localStorageBenchmark: BenchmarkUnit = {
     description: 'Standard persistent synchronous key-value storage. Simple but blocks the main thread and has limited capacity (typically 5MB).',
     icon: '💾',
     category: 'low',
+    url: 'https://html.spec.whatwg.org/multipage/webstorage.html#the-localstorage-attribute',
     runType: 'main.sync',
     run: (sizeName: string, _sizeValue: number, payloads: { original: string; modified: string }): StorageStepDefinitions => {
         const key = `bench_k_ls_${sizeName}`;

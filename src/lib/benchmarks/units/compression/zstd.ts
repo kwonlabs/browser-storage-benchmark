@@ -11,6 +11,7 @@ export const zstdBenchmark: BenchmarkUnit = {
     description: 'Meta\'s real-time compression engine, integrated via WebAssembly (zstd-wasm). Offers unparalleled speed and flexibility.',
     icon: '🦖',
     category: 'compression',
+    url: 'https://github.com/bokuweb/zstd-wasm',
     runType: 'worker.async',
     run: (_sizeName: string, sizeValue: number, _payloads: { original: string; modified: string }): CompressionStepDefinitions => {
         const payload = generatePayloadBuffer(sizeValue);

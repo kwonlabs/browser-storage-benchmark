@@ -1,10 +1,10 @@
 import type { BenchmarkUnit, CompressionStepDefinitions } from '../../types';
 import { generatePayloadBuffer } from '../../benchmark';
 
-export const deflateBenchmark: BenchmarkUnit = {
-    id: 'deflate',
-    name: 'Deflate',
-    description: 'Raw DEFLATE streaming compression built natively into modern browsers. Efficient stream processing.',
+export const deflateRawBenchmark: BenchmarkUnit = {
+    id: 'deflate-raw',
+    name: 'Deflate-raw',
+    description: 'Raw DEFLATE streaming compression built into modern browsers (CompressionStream). Lacks zlib headers/footers.',
     icon: '💨',
     category: 'compression',
     url: 'https://wicg.github.io/compression/',
@@ -14,7 +14,7 @@ export const deflateBenchmark: BenchmarkUnit = {
 
         return {
             compress: async () => {
-                const cs = new CompressionStream('deflate');
+                const cs = new CompressionStream('deflate-raw');
                 const writer = cs.writable.getWriter();
                 writer.write(payload as any); writer.close();
                 const chunks = []; const reader = cs.readable.getReader();
@@ -24,7 +24,7 @@ export const deflateBenchmark: BenchmarkUnit = {
                 return out;
             },
             decompress: async (data: Uint8Array) => {
-                const ds = new DecompressionStream('deflate');
+                const ds = new DecompressionStream('deflate-raw');
                 const writer = ds.writable.getWriter();
                 writer.write(data as any); writer.close();
                 const chunks = []; const reader = ds.readable.getReader();

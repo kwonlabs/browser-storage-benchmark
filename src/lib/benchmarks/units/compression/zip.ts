@@ -8,6 +8,7 @@ export const zipBenchmark: BenchmarkUnit = {
     description: 'A widely used format implemented via the fflate library, balancing compression ratio and speed. Ideal for multi-file packaging.',
     icon: '📦',
     category: 'compression',
+    url: 'https://github.com/101arrowz/fflate',
     runType: 'worker.async',
     run: (_sizeName: string, sizeValue: number, _payloads: { original: string; modified: string }): CompressionStepDefinitions => {
         const payload = generatePayloadBuffer(sizeValue);

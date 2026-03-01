@@ -6,6 +6,7 @@ export const opfsAsyncBenchmark: BenchmarkUnit = {
     description: 'Origin Private File System (Async API). Provides higher performance for storage operations compared to traditional storage APIs.',
     icon: '📂',
     category: 'high-native',
+    url: 'https://fs.spec.whatwg.org/#origin-private-file-system',
     runType: 'worker.async',
     run: (sizeName: string, _sizeValue: number, payloads: { original: string; modified: string }): StorageStepDefinitions => {
         const fileName = `bench_opfs_async_${sizeName}_${Math.random().toString(36).slice(2, 7)}.txt`;

@@ -8,6 +8,7 @@ export const brotliBenchmark: BenchmarkUnit = {
     description: 'Advanced compression format (WASM based), highly optimized for web content.',
     icon: '🍞',
     category: 'compression',
+    url: 'https://github.com/httptoolkit/brotli-wasm',
     runType: 'worker.async',
     run: (_sizeName: string, sizeValue: number, _payloads: { original: string; modified: string }): CompressionStepDefinitions => {
         const payload = generatePayloadBuffer(sizeValue);

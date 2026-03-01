@@ -6,6 +6,7 @@ export const sqliteAsyncBenchmark: BenchmarkUnit = {
     description: 'The legendary relational database running via WebAssembly with OPFS (Async) support.',
     icon: '💎',
     category: 'high-wrapper',
+    url: 'https://sqlite.org/wasm',
     runType: 'worker.async',
     run: (sizeName: string, _sizeValue: number, payloads: { original: string; modified: string }): StorageStepDefinitions => {
         const dbPath = `/bench_async_${sizeName}_${Math.random().toString(36).slice(2, 7)}.sqlite3`;

@@ -6,6 +6,7 @@ export const indexedDBBenchmark: BenchmarkUnit = {
     description: 'The standard for client-side structured data. Supports transactions, indexes, and large binary blobs.',
     icon: '🗂️',
     category: 'high-native',
+    url: 'https://w3c.github.io/IndexedDB/',
     runType: 'worker.async',
     run: (sizeName: string, _sizeValue: number, payloads: { original: string; modified: string }): StorageStepDefinitions => {
         const dbName = 'bench-idb';

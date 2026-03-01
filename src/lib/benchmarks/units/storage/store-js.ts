@@ -7,6 +7,7 @@ export const storeJsBenchmark: BenchmarkUnit = {
     description: 'Cross-browser storage for all browsers (used to be store.js, now using store2 for better maintenance).',
     icon: '🏪',
     category: 'high-wrapper',
+    url: 'https://github.com/nbubna/store',
     runType: 'main.sync',
     run: (_sizeName: string, _sizeValue: number, payloads: { original: string; modified: string }): StorageStepDefinitions => {
         const key = 'bench_k_s2';
