@@ -3,7 +3,7 @@ import { generatePayloadBuffer } from '../../benchmark';
 
 export const deflateRawBenchmark: BenchmarkUnit = {
     id: 'deflate-raw',
-    name: 'Deflate-raw',
+    name: 'DEFLATE (Raw)',
     description: 'Raw DEFLATE streaming compression built into modern browsers (CompressionStream). Lacks zlib headers/footers.',
     icon: '💨',
     category: 'compression',

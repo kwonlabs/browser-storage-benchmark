@@ -67,11 +67,20 @@ function renderGuidesHtml() {
 
     units.forEach(unit => {
       const linkHtml = unit.url ? `<a href="${unit.url}" target="_blank" class="guide-url" title="Official Documentation" style="font-size: 0.8em; text-decoration: none; margin-left: 0.5rem;">🔗</a>` : '';
+
+      const metaInfo = [
+        unit.releaseYear ? `Est. ${unit.releaseYear}` : '',
+        unit.developer ? `by ${unit.developer}` : ''
+      ].filter(Boolean).join(' | ');
+
+      const metaHtml = metaInfo ? `<div class="card-meta" style="font-size: 0.85em; color: var(--text-muted); padding-bottom: 0.5rem;">${metaInfo}</div>` : '';
+
       html += `
             <div class="guide-card">
               <div class="card-icon">${unit.icon}</div>
               <div class="card-body">
                 <h4>${unit.name}${linkHtml}</h4>
+                ${metaHtml}
                 <p>${unit.description}</p>
               </div>
             </div>`;
@@ -131,7 +140,7 @@ export default defineConfig({
   },
   optimizeDeps: {
     include: ['pouchdb-browser'],
-    exclude: ['@sqlite.org/sqlite-wasm', 'brotli-wasm', '@bokuweb/zstd-wasm']
+    exclude: ['@sqlite.org/sqlite-wasm', 'brotli-wasm', '@bokuweb/zstd-wasm', 'bzip2-wasm']
   },
   logLevel: 'info', // Can be set to 'warn' or 'error' if noise persists
   worker: {

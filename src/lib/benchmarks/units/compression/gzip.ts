@@ -3,8 +3,8 @@ import { generatePayloadBuffer } from '../../benchmark';
 
 export const gzipBenchmark: BenchmarkUnit = {
     id: 'gzip',
-    name: 'Gzip',
-    description: 'Utilizes the browser\'s native CompressionStream API (DEFLATE). Provides zero-overhead text compression without external dependencies.',
+    name: 'GZIP',
+    description: 'Standard GZIP streaming compression built natively into modern browsers.',
     icon: '🗜️',
     category: 'compression',
     url: 'https://wicg.github.io/compression/',

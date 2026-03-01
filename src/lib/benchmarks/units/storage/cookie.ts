@@ -18,17 +18,17 @@ export const cookieBenchmark: BenchmarkUnit = {
                     console.warn(`[Cookie] Size limit exceeded (${payloads.original.length} bytes). Cookies are limited to ~4KB.`);
                     return -1;
                 }
-                document.cookie = `${key}=${payloads.original}; path=/; samesite=Lax;`;
+                document.cookie = `${key}=${encodeURIComponent(payloads.original)}; path=/; samesite=Lax;`;
             },
             read: () => {
                 if (payloads.original.length > COOKIE_LIMIT) return null;
                 const parts = document.cookie.split(`${key}=`);
-                if (parts.length === 2) return parts.pop()?.split(';').shift();
+                if (parts.length >= 2) return decodeURIComponent(parts.pop()?.split(';').shift() || '');
                 return null;
             },
             update: () => {
                 if (payloads.modified.length > COOKIE_LIMIT) return -1;
-                document.cookie = `${key}=${payloads.modified}; path=/; samesite=Lax;`;
+                document.cookie = `${key}=${encodeURIComponent(payloads.modified)}; path=/; samesite=Lax;`;
             },
             delete: () => {
                 document.cookie = `${key}=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT;`;

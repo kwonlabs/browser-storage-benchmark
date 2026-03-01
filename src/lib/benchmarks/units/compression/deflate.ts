@@ -3,7 +3,7 @@ import { generatePayloadBuffer } from '../../benchmark';
 
 export const deflateBenchmark: BenchmarkUnit = {
     id: 'deflate',
-    name: 'Deflate',
+    name: 'ZLIB (Deflate)',
     description: 'Raw DEFLATE streaming compression built natively into modern browsers. Efficient stream processing.',
     icon: '💨',
     category: 'compression',

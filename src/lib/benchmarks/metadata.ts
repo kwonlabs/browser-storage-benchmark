@@ -5,6 +5,8 @@ export interface BenchmarkMetadata {
     icon: string;
     category: 'low' | 'high-native' | 'high-wrapper' | 'compression';
     url?: string;
+    releaseYear?: number;
+    developer?: string;
 }
 
 export const benchmarkMetadata: BenchmarkMetadata[] = [
@@ -113,51 +115,103 @@ export const benchmarkMetadata: BenchmarkMetadata[] = [
         url: 'https://github.com/nbubna/store'
     },
     {
-        id: 'zip',
-        name: 'ZIP',
-        description: 'A widely used format implemented via the fflate library, balancing compression ratio and speed. Ideal for multi-file packaging.',
-        icon: '📦',
-        category: 'compression',
-        url: 'https://github.com/101arrowz/fflate'
-    },
-    {
-        id: 'gzip',
-        name: 'Gzip',
-        description: 'Utilizes the browser\'s native CompressionStream API (DEFLATE). Provides zero-overhead text compression without external dependencies.',
-        icon: '🗜️',
-        category: 'compression',
-        url: 'https://wicg.github.io/compression/'
-    },
-    {
         id: 'deflate',
-        name: 'Deflate',
-        description: 'Raw DEFLATE streaming compression built natively into modern browsers. Efficient stream processing.',
+        name: 'ZLIB (Deflate)',
+        description: 'Standard DEFLATE streaming compression with zlib headers. Built natively into modern browsers and tested via the CompressionStream API.',
         icon: '💨',
         category: 'compression',
-        url: 'https://wicg.github.io/compression/'
+        url: 'https://wicg.github.io/compression/',
+        releaseYear: 1996,
+        developer: 'Jean-loup Gailly, Mark Adler'
     },
     {
         id: 'deflate-raw',
-        name: 'Deflate-raw',
-        description: 'Raw DEFLATE streaming compression built into modern browsers (CompressionStream). Lacks zlib headers/footers.',
+        name: 'DEFLATE (Raw)',
+        description: 'Raw DEFLATE streaming compression without headers/footers. Built natively into modern browsers and tested via the CompressionStream API.',
         icon: '💨',
         category: 'compression',
-        url: 'https://wicg.github.io/compression/'
+        url: 'https://wicg.github.io/compression/',
+        releaseYear: 1996,
+        developer: 'Phil Katz'
+    },
+    {
+        id: 'gzip',
+        name: 'GZIP',
+        description: 'Standard GZIP compression format. Built natively into modern browsers and tested via the CompressionStream API.',
+        icon: '🗜️',
+        category: 'compression',
+        url: 'https://wicg.github.io/compression/',
+        releaseYear: 1996,
+        developer: 'Jean-loup Gailly, Mark Adler'
+    },
+    {
+        id: 'zip',
+        name: 'ZIP',
+        description: 'Classic container format using Deflate for multi-file packaging. Tested in the browser using the pure-JS fflate library.',
+        icon: '📦',
+        category: 'compression',
+        url: 'https://github.com/101arrowz/fflate',
+        releaseYear: 1989,
+        developer: 'Phil Katz / PKWARE'
+    },
+    {
+        id: 'bzip2',
+        name: 'Bzip2',
+        description: 'High-quality data compressor excellent for text-heavy data. Tested in the browser via WebAssembly (bzip2-wasm).',
+        icon: '🗜️',
+        category: 'compression',
+        url: 'https://sourceware.org/bzip2/',
+        releaseYear: 1996,
+        developer: 'Julian Seward'
+    },
+    {
+        id: 'lzma',
+        name: 'LZMA',
+        description: 'Maximum compression ratio algorithm. Slow but extremely space-efficient. Tested via a JavaScript implementation (lzma).',
+        icon: '📦',
+        category: 'compression',
+        url: 'https://tukaani.org/xz/',
+        releaseYear: 1998,
+        developer: 'Igor Pavlov'
+    },
+    {
+        id: 'snappy',
+        name: 'Snappy',
+        description: 'High-speed compression balanced for speed and reasonable ratio. Tested in the browser via WebAssembly (snappy-wasm).',
+        icon: '⚡',
+        category: 'compression',
+        url: 'https://google.github.io/snappy/',
+        releaseYear: 2011,
+        developer: 'Google'
+    },
+    {
+        id: 'lz4',
+        name: 'LZ4',
+        description: 'Extremely fast compression with near-zero CPU overhead. Tested in the browser via WebAssembly (lz4-wasm).',
+        icon: '🏎️',
+        category: 'compression',
+        url: 'https://lz4.github.io/lz4/',
+        releaseYear: 2011,
+        developer: 'Yann Collet'
     },
     {
         id: 'brotli',
         name: 'Brotli',
-        description: 'Advanced compression format (WASM based), highly optimized for web content.',
+        description: 'Modern standard highly optimized for web content. Tested in the browser via WebAssembly (brotli-wasm).',
         icon: '🍞',
         category: 'compression',
-        url: 'https://github.com/httptoolkit/brotli-wasm'
+        url: 'https://github.com/httptoolkit/brotli-wasm',
+        releaseYear: 2013,
+        developer: 'Google'
     },
     {
         id: 'zstd',
-        name: 'zstd',
-        description: 'Meta\'s real-time compression engine, integrated via WebAssembly (zstd-wasm). Offers unparalleled speed and flexibility.',
+        name: 'Zstandard',
+        description: 'Real-time compression engine with unparalleled scalability. Tested in the browser via WebAssembly (zstd-wasm).',
         icon: '🦖',
         category: 'compression',
-        url: 'https://github.com/bokuweb/zstd-wasm'
+        url: 'https://github.com/bokuweb/zstd-wasm',
+        releaseYear: 2016,
+        developer: 'Facebook (Meta)'
     }
 ];
