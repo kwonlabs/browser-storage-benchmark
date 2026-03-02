@@ -1,0 +1,127 @@
+---
+import { ViewTransitions } from "astro:transitions";
+import ThemeToggle from "../components/ThemeToggle.svelte";
+import Github from "@lucide/astro/icons/github";
+import "../style.css";
+
+export interface Props {
+  title?: string;
+  description?: string;
+}
+const {
+  title = "Browser Storage Benchmark",
+  description = "Measure and compare browser storage performance: IndexedDB, OPFS, CacheStorage, SQLite, compression engines, and more.",
+} = Astro.props;
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content={description} />
+    <title>{title}</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;700&family=Outfit:wght@400;600;800&display=swap"
+      rel="stylesheet"
+    />
+    <script src="/coi-serviceworker.js" is:inline></script>
+    <ViewTransitions />
+  </head>
+
+  <body>
+    <header>
+      <div class="header-container">
+        <div class="header-left">
+          <h1 class="logo" id="site-logo">Browser Storage Benchmark</h1>
+        </div>
+        <div style="display: flex; align-items: center; gap: 1rem;">
+          <nav
+            class="tabs"
+            style="display: flex; align-items: center; gap: 0.5rem;"
+          >
+            <a href="/" class="tab-btn" id="nav-home">Home</a>
+            <a href="/storage" class="tab-btn" id="nav-storage">Storage</a>
+            <a href="/compression" class="tab-btn" id="nav-compression"
+              >Compression</a
+            >
+          </nav>
+          <ThemeToggle client:load />
+        </div>
+      </div>
+    </header>
+
+    <main>
+      <slot />
+    </main>
+
+    <footer>
+      <div class="footer-container">
+        <div class="footer-left">
+          <p>&copy; 2026 KwonMinchul Computer Labs, LLC.</p>
+        </div>
+        <div class="footer-right">
+          <a
+            href="https://github.com/kwonlabs/browser-storage-benchmark"
+            target="_blank"
+            class="github-link"
+          >
+            <Github width={20} height={20} stroke-width={2} />
+            GitHub
+          </a>
+        </div>
+      </div>
+    </footer>
+
+    <script>
+      // ViewTransitions 대응: 초기 로드 + 클라이언트 전환 후 모두 실행
+      function initPage() {
+        // ── 테마 초기화 ──────────────────────────
+        const savedTheme = localStorage.getItem("theme");
+        if (savedTheme === "light" || savedTheme === "dark") {
+          document.documentElement.setAttribute("data-theme", savedTheme);
+        } else if (
+          window.matchMedia?.("(prefers-color-scheme: light)").matches
+        ) {
+          document.documentElement.setAttribute("data-theme", "light");
+        }
+
+        // ── nav active 표시 ──────────────────────
+        const path = window.location.pathname;
+        const navHome = document.getElementById("nav-home");
+        const navStorage = document.getElementById("nav-storage");
+        const navCompression = document.getElementById("nav-compression");
+        if (navHome && navStorage && navCompression) {
+          navHome.classList.toggle(
+            "active",
+            path === "/" || path === "/index.html",
+          );
+          navStorage.classList.toggle("active", path.startsWith("/storage"));
+          navCompression.classList.toggle(
+            "active",
+            path.startsWith("/compression"),
+          );
+        }
+
+        // ── 로고 클릭 → Home ─────────────────────
+        const logo = document.getElementById("site-logo");
+        if (logo) {
+          const newLogo = logo.cloneNode(true) as HTMLElement;
+          logo.replaceWith(newLogo);
+          newLogo.addEventListener("click", () => {
+            window.location.href = "/";
+          });
+          newLogo.style.cursor = "pointer";
+        }
+      }
+
+      // 초기 실행 (직접 접근/새로고침)
+      initPage();
+      // ViewTransitions 클라이언트 전환 후 재실행
+      document.addEventListener("astro:page-load", initPage);
+    </script>
+  </body>
+</html>

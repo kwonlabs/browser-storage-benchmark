@@ -7,7 +7,10 @@ export const opfsAsyncBenchmark: BenchmarkUnit = {
     icon: '📂',
     category: 'high-native',
     url: 'https://fs.spec.whatwg.org/#origin-private-file-system',
+    releaseYear: 2022,
+    developer: 'WHATWG',
     runType: 'worker.async',
+    isSupported: () => !!navigator.storage?.getDirectory,
     run: (sizeName: string, _sizeValue: number, payloads: { original: string; modified: string }): StorageStepDefinitions => {
         const fileName = `bench_opfs_async_${sizeName}_${Math.random().toString(36).slice(2, 7)}.txt`;
         let root: FileSystemDirectoryHandle;

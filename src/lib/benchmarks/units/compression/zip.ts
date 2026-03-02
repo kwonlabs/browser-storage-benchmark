@@ -1,5 +1,4 @@
 import type { BenchmarkUnit, CompressionStepDefinitions } from '../../types';
-import { generatePayloadBuffer } from '../../benchmark';
 import * as fflate from 'fflate';
 
 export const zipBenchmark: BenchmarkUnit = {
@@ -9,9 +8,11 @@ export const zipBenchmark: BenchmarkUnit = {
     icon: '📦',
     category: 'compression',
     url: 'https://github.com/101arrowz/fflate',
+    releaseYear: 1989,
+    developer: 'Phil Katz / PKWARE',
     runType: 'worker.async',
-    run: (_sizeName: string, sizeValue: number, _payloads: { original: string; modified: string }): CompressionStepDefinitions => {
-        const payload = generatePayloadBuffer(sizeValue);
+    run: (_sizeName: string, _sizeValue: number, _payloads: { original: any; modified: any }): CompressionStepDefinitions => {
+        const payload = _payloads.original as Uint8Array;
         return {
             compress: () => fflate.zipSync({ "f": payload }, { level: 6 }),
             decompress: (data: Uint8Array) => {

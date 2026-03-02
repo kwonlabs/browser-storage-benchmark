@@ -7,17 +7,36 @@ export const sqliteSyncBenchmark: BenchmarkUnit = {
     icon: '🚀',
     category: 'high-wrapper',
     url: 'https://sqlite.org/wasm',
+    releaseYear: 2000,
+    developer: 'D. Richard Hipp',
     runType: 'worker.async',
+    isSupported: async () => {
+        if (typeof navigator.storage?.getDirectory !== 'function') {
+            return { supported: false, reason: 'OPFS API not available' };
+        }
+        // SQLite's OPFS VFS requires SharedArrayBuffer (crossOriginIsolated)
+        if (!window.crossOriginIsolated) {
+            return { supported: false, reason: 'Cross-origin isolation disabled (SAB required)' };
+        }
+
+        // On the main thread, we cannot fully verify the 'opfs' VFS 
+        // because it requires a worker context to initialize.
+        return { supported: true };
+    },
     run: (sizeName: string, _sizeValue: number, payloads: { original: string; modified: string }): StorageStepDefinitions => {
-        const dbPath = `/bench_sync_${sizeName}_${Math.random().toString(36).slice(2, 7)}.sqlite3`;
+        const dbName = `bench_sqlite_sync_${sizeName}_${Math.random().toString(36).slice(2, 7)}`;
+        const dbPath = `/${dbName}`;
         let db: any;
+        let sqlite3: any;
 
         return {
             setup: async () => {
+                if (!sqlite3) {
+                    const sqlite3InitModule = (await import('@sqlite.org/sqlite-wasm')).default;
+                    sqlite3 = await sqlite3InitModule();
+                }
+
                 if (!db) {
-                    // @ts-ignore
-                    const { default: sqlite3InitModule } = await import('@sqlite.org/sqlite-wasm');
-                    const sqlite3 = await sqlite3InitModule();
                     if (!('opfs' in sqlite3)) throw new Error('OPFS not supported');
                     db = new sqlite3.oo1.OpfsDb(dbPath, 'c');
                     db.exec("CREATE TABLE IF NOT EXISTS data (id TEXT PRIMARY KEY, val TEXT)");
@@ -38,6 +57,7 @@ export const sqliteSyncBenchmark: BenchmarkUnit = {
                         const root = await navigator.storage.getDirectory();
                         await root.removeEntry(dbPath.replace(/^\//, ''), { recursive: true });
                     } catch (e) { /* ignore cleanup error */ }
+                    db = null;
                 }
             }
         };

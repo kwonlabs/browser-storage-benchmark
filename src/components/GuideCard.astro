@@ -1,0 +1,46 @@
+---
+import type { BenchmarkMetadata } from "../lib/benchmarks/metadata.ts";
+
+interface Props {
+    unit: BenchmarkMetadata;
+}
+const { unit } = Astro.props;
+
+const metaParts = [
+    unit.releaseYear ? `Est. ${unit.releaseYear}` : "",
+    unit.developer ? `by ${unit.developer}` : "",
+].filter(Boolean);
+---
+
+<div class="guide-card">
+    <div class="card-icon">{unit.icon}</div>
+    <div class="card-body">
+        <h4>
+            {unit.name}
+            {
+                unit.url && (
+                    <a
+                        href={unit.url}
+                        target="_blank"
+                        class="guide-url"
+                        title="Official Documentation"
+                        style="font-size:0.8em;text-decoration:none;margin-left:0.5rem;"
+                    >
+                        🔗
+                    </a>
+                )
+            }
+        </h4>
+        {
+            metaParts.length > 0 && (
+                <div
+                    class="card-meta"
+                    style="font-size:0.85em;color:var(--text-muted);padding-bottom:0.5rem;"
+                >
+                    {metaParts.join(" | ")}
+                </div>
+            )
+        }
+        <p>{unit.description}</p>
+    </div>
+</div>

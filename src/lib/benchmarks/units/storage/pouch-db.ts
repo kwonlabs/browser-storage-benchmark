@@ -1,5 +1,3 @@
-// @ts-ignore
-import PouchDB from 'pouchdb-browser';
 import type { BenchmarkUnit, StorageStepDefinitions } from '../../types';
 
 export const pouchDBBenchmark: BenchmarkUnit = {
@@ -9,12 +7,17 @@ export const pouchDBBenchmark: BenchmarkUnit = {
     icon: '📭',
     category: 'high-wrapper',
     url: 'https://pouchdb.com/',
+    releaseYear: 2012,
+    developer: 'Nolan Lawson',
     runType: 'main.async',
     run: (sizeName: string, _sizeValue: number, payloads: { original: string; modified: string }): StorageStepDefinitions => {
         const dbName = `bench_pouch_${sizeName}_${Math.random().toString(36).slice(2, 7)}`;
         let db: any;
+        let PouchDB: any;
         return {
             setup: async () => {
+                const m = await import('pouchdb-browser');
+                PouchDB = m.default;
                 db = new PouchDB(dbName);
             },
             insert: async () => {

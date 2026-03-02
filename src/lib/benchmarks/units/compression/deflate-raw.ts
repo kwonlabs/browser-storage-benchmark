@@ -1,5 +1,4 @@
 import type { BenchmarkUnit, CompressionStepDefinitions } from '../../types';
-import { generatePayloadBuffer } from '../../benchmark';
 
 export const deflateRawBenchmark: BenchmarkUnit = {
     id: 'deflate-raw',
@@ -8,9 +7,11 @@ export const deflateRawBenchmark: BenchmarkUnit = {
     icon: '💨',
     category: 'compression',
     url: 'https://wicg.github.io/compression/',
+    releaseYear: 1996,
+    developer: 'Phil Katz',
     runType: 'worker.async',
-    run: (_sizeName: string, sizeValue: number, _payloads: { original: string; modified: string }): CompressionStepDefinitions => {
-        const payload = generatePayloadBuffer(sizeValue);
+    run: (_sizeName: string, _sizeValue: number, _payloads: { original: any; modified: any }): CompressionStepDefinitions => {
+        const payload = _payloads.original as Uint8Array;
 
         return {
             compress: async () => {

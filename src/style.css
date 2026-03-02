@@ -134,6 +134,10 @@ header {
   cursor: pointer;
   border-radius: 8px;
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  text-decoration: none;
+  /* a 태그 기본 밑줄 제거 */
+  display: inline-flex;
+  align-items: center;
 }
 
 .tab-btn:hover {
@@ -147,9 +151,19 @@ header {
   box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
 }
 
+#nav-storage.active {
+  background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
+}
+
+#nav-compression.active {
+  background: linear-gradient(135deg, #a78bfa, #f472b6);
+  box-shadow: 0 4px 12px rgba(167, 139, 250, 0.4);
+}
+
 /* Main Content */
 main {
-  max-width: 1200px;
+  max-width: 1400px;
   margin: 0 auto;
   padding: 3rem 2rem;
 }
@@ -223,12 +237,14 @@ main {
   cursor: pointer;
   transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
   box-shadow: 0 10px 25px -5px rgba(99, 102, 241, 0.4);
-  display: flex;
+  display: inline-flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   text-transform: none;
   letter-spacing: normal;
+  text-decoration: none;
+  /* a 태그 기본 밑줄 제거 */
 }
 
 .btn-primary-large:hover {
@@ -272,9 +288,10 @@ main {
   width: 100%;
 }
 
-.section-divider hr {
+.section-divider::before,
+.section-divider::after {
+  content: '';
   flex: 1;
-  border: none;
   border-top: 2px solid var(--border-color);
   opacity: 0.8;
 }
@@ -730,15 +747,15 @@ main {
 
 .trend-layout-storage {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  grid-template-columns: repeat(4, 1fr);
   gap: 1.5rem;
   margin-bottom: 2rem;
 }
 
 .trend-layout-vertical {
-  display: flex;
-  flex-direction: column;
-  gap: 3rem;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.5rem;
 }
 
 .payload-chart-group {
@@ -822,7 +839,7 @@ main {
 }
 
 .chart-wrapper {
-  height: 350px;
+  height: 280px;
   width: 100%;
 }
 
@@ -838,7 +855,7 @@ main {
 /* Progress Area */
 .overall-progress {
   width: 100%;
-  margin: 1.5rem 0 0;
+  margin: 1.5rem 0;
 }
 
 .progress-info {
@@ -1030,6 +1047,13 @@ main {
   border-color: var(--accent-primary) !important;
   color: #fff;
   transform: translateY(-2px);
+}
+
+.btn-icon-s.active {
+  background: var(--accent-primary) !important;
+  border-color: var(--accent-primary) !important;
+  color: #fff !important;
+  box-shadow: 0 0 10px rgba(99, 102, 241, 0.4);
 }
 
 .btn-icon-s.btn-close-s:hover {
@@ -1461,8 +1485,8 @@ footer {
   }
 
   .report-chart-item {
-    padding: 1.5rem;
-    min-height: 400px;
+    padding: 1rem;
+    min-height: 320px;
   }
 
   .history-panel {

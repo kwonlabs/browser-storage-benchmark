@@ -4,9 +4,11 @@
   "version": "0.1.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
-    "build": "tsc && vite build",
-    "preview": "vite preview",
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
+    "vite:dev": "vite",
+    "vite:build": "tsc && vite build",
     "postinstall": "node postinstall.mjs"
   },
   "devDependencies": {
@@ -17,21 +19,27 @@
     "vite-plugin-wasm": "^3.5.0"
   },
   "dependencies": {
+    "@astrojs/svelte": "^7.2.5",
     "@bokuweb/zstd-wasm": "^0.0.27",
+    "@lucide/astro": "^0.575.0",
+    "@lucide/svelte": "^0.575.0",
     "@sqlite.org/sqlite-wasm": "^3.51.2-build6",
+    "@types/msgpack-lite": "^0.1.12",
+    "astro": "^5.18.0",
     "brotli-wasm": "^3.0.1",
     "bzip2-wasm": "^1.0.1",
     "chart.js": "^4.5.1",
     "dexie": "^4.3.0",
     "fflate": "^0.8.2",
-    "fzstd": "^0.1.1",
     "idb": "^8.0.3",
     "localforage": "^1.10.0",
     "lz4-wasm": "^0.9.2",
     "lzma": "^2.3.2",
+    "msgpack-lite": "^0.1.26",
     "pouchdb-browser": "^9.0.0",
     "snappy-wasm": "^0.3.0",
     "store2": "^2.14.4",
+    "svelte": "^5.53.6",
     "vite-plugin-node-polyfills": "^0.25.0"
   }
 }

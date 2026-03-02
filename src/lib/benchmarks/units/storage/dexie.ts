@@ -8,24 +8,25 @@ export const dexieBenchmark: BenchmarkUnit = {
     icon: '🚀',
     category: 'high-wrapper',
     url: 'https://dexie.org/',
+    releaseYear: 2014,
+    developer: 'David Fahlander',
     runType: 'main.async',
     run: (sizeName: string, _sizeValue: number, payloads: { original: string; modified: string }): StorageStepDefinitions => {
+        const dbName = `bench_dexie_${sizeName}_${Math.random().toString(36).slice(2, 7)}`;
         let db: Dexie;
-        let table: Table<{ id: string; val: string }, string>;
-
+        let table: Table;
         return {
             setup: async () => {
-                const name = `bench_dexie_${sizeName}_${Math.random().toString(36).slice(2, 7)}`;
                 if (db) {
                     await db.close();
                     await Dexie.delete(db.name);
                 }
-                db = new Dexie(name);
+                db = new Dexie(dbName);
                 db.version(1).stores({
-                    bench: 'id'
+                    bench: 'id, val'
                 });
-                table = db.table('bench');
                 await db.open();
+                table = db.table('bench');
                 await table.clear();
             },
             insert: async () => {
@@ -45,7 +46,7 @@ export const dexieBenchmark: BenchmarkUnit = {
             teardown: async () => {
                 if (db) {
                     await db.close();
-                    await Dexie.delete(db.name); // Full cleanup
+                    await Dexie.delete(db.name);
                     db = null as any;
                 }
             }

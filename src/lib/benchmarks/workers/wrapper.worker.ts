@@ -3,7 +3,7 @@ import { runStorageLifecycle, generatePayloadString } from '../benchmark';
 import type { StorageStepDefinitions } from '../types';
 
 self.onmessage = async (e: MessageEvent) => {
-    const { unitId, sizeName, sizeValue, payloadType = 'repetitive' } = e.data;
+    const { unitId, sizeName, sizeValue, payloadType = 'repetitive', iterations = 1 } = e.data;
     const unit = getBenchmarkById(unitId);
 
     if (!unit) {
@@ -16,9 +16,9 @@ self.onmessage = async (e: MessageEvent) => {
         const modified = original + 'm';
         const steps = unit.run(sizeName, sizeValue, { original, modified }) as StorageStepDefinitions;
 
-        const result = await runStorageLifecycle(sizeValue, steps, { original, modified }, unit.name);
-
-        if (steps.teardown) await steps.teardown();
+        const result = await runStorageLifecycle(sizeValue, steps, { original, modified }, unit.name, iterations, (step, i, dur) => {
+            self.postMessage({ type: 'iteration_progress', unitId, step, iteration: i, total: iterations, sizeName, payloadType, duration: dur });
+        });
 
         self.postMessage({
             type: 'done_wrapper',
@@ -34,6 +34,7 @@ self.onmessage = async (e: MessageEvent) => {
             unitId,
             sizeName,
             payloadType,
+            error: err.message || err.toString(),
             result: { insert: -1, read: -1, update: -1, delete: -1 }
         });
     }

@@ -7,6 +7,8 @@ export const indexedDBBenchmark: BenchmarkUnit = {
     icon: '🗂️',
     category: 'high-native',
     url: 'https://w3c.github.io/IndexedDB/',
+    releaseYear: 2011,
+    developer: 'W3C',
     runType: 'worker.async',
     run: (sizeName: string, _sizeValue: number, payloads: { original: string; modified: string }): StorageStepDefinitions => {
         const dbName = 'bench-idb';

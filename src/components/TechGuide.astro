@@ -1,0 +1,8 @@
+---
+import { categoryMetadata } from "../lib/benchmarks/metadata.ts";
+import GuideGroup from "./GuideGroup.astro";
+---
+
+<div class="tech-guide">
+    {categoryMetadata.map((sec) => <GuideGroup sec={sec} />)}
+</div>

@@ -1,17 +1,6 @@
 import type { BenchmarkUnit, CompressionStepDefinitions } from '../../types';
-import { generatePayloadBuffer } from '../../benchmark';
-// @ts-ignore
-import init, { compress_raw, decompress_raw } from 'snappy-wasm';
 
-let initialized = false;
 
-async function ensureInitialized() {
-    if (!initialized) {
-        // Use the copy in public/wasm for reliable loading in both dev and prod
-        await init('/wasm/snappy_bg.wasm');
-        initialized = true;
-    }
-}
 
 export const snappyBenchmark: BenchmarkUnit = {
     id: 'snappy',
@@ -20,19 +9,21 @@ export const snappyBenchmark: BenchmarkUnit = {
     icon: '⚡',
     category: 'compression',
     url: 'https://google.github.io/snappy/',
+    releaseYear: 2011,
+    developer: 'Google',
     runType: 'worker.async',
-    run: (_sizeName: string, sizeValue: number, _payloads: { original: string; modified: string }): CompressionStepDefinitions => {
-        const payload = generatePayloadBuffer(sizeValue);
+    run: (_sizeName: string, _sizeValue: number, _payloads: { original: any; modified: any }): CompressionStepDefinitions => {
+        const payload = _payloads.original as Uint8Array;
+        let snappy: any;
 
         return {
-            compress: async () => {
-                await ensureInitialized();
-                return compress_raw(payload);
+            setup: async () => {
+                const m = await import('snappy-wasm');
+                await m.default();
+                snappy = m;
             },
-            decompress: async (data: Uint8Array) => {
-                await ensureInitialized();
-                return decompress_raw(data);
-            }
+            compress: () => snappy.compress_raw(payload),
+            decompress: (data: Uint8Array) => snappy.decompress_raw(data)
         };
     }
 };

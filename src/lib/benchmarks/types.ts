@@ -1,3 +1,12 @@
+export interface SizeMetadata {
+    id: string;      // e.g., '10mb'
+    value: number;   // size in bytes
+    label: string;   // e.g., '10MB'
+    storageDefault: boolean;
+    compressionDefault: boolean;
+    warning?: boolean; // If true, rendering will show a warning style (e.g., *)
+}
+
 export interface TaskDef {
     category: string;
     sizeName: string;
@@ -19,6 +28,7 @@ export interface BenchmarkResult {
         delete?: number;
     };
     iterations: number;
+    driverInfo?: string;
 }
 
 export interface CompressionResult {
@@ -57,7 +67,7 @@ export interface BenchmarkData {
 export type RunType = 'main.sync' | 'main.async' | 'worker.async';
 
 export interface StorageStepDefinitions {
-    setup?: () => void | Promise<void>;
+    setup?: () => any | Promise<any>;
     insert: () => any | Promise<any>;
     read: () => any | Promise<any>;
     update: () => any | Promise<any>;
@@ -72,6 +82,8 @@ export interface CompressionStepDefinitions {
     teardown?: () => void | Promise<void>;
 }
 
+export type SupportResult = boolean | { supported: boolean; reason?: string | undefined };
+
 export interface BenchmarkUnit {
     id: string;
     name: string;
@@ -82,7 +94,10 @@ export interface BenchmarkUnit {
     releaseYear?: number;
     developer?: string;
     runType: RunType;
-    run: (sizeName: string, sizeValue: number, payloads: { original: string; modified: string }) => StorageStepDefinitions | CompressionStepDefinitions | any;
+    maxSize?: number; // Optional limit for this benchmark (in bytes)
+    specialization?: 'generic' | 'structured' | 'binary';
+    isSupported?: () => SupportResult | Promise<SupportResult>;
+    run: (sizeName: string, sizeValue: number, payloads: { original: any; modified: any }) => StorageStepDefinitions | CompressionStepDefinitions | any;
 }
 
 export interface EnvironmentMetadata {

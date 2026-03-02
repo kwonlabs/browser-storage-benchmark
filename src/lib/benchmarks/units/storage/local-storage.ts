@@ -7,7 +7,10 @@ export const localStorageBenchmark: BenchmarkUnit = {
     icon: '💾',
     category: 'low',
     url: 'https://html.spec.whatwg.org/multipage/webstorage.html#the-localstorage-attribute',
+    releaseYear: 2009,
+    developer: 'W3C',
     runType: 'main.sync',
+    maxSize: 4 * 1024 * 1024,
     run: (sizeName: string, _sizeValue: number, payloads: { original: string; modified: string }): StorageStepDefinitions => {
         const key = `bench_k_ls_${sizeName}`;
         return {

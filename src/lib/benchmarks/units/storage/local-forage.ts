@@ -8,11 +8,12 @@ export const localForageBenchmark: BenchmarkUnit = {
     icon: '📦',
     category: 'high-wrapper',
     url: 'https://localforage.github.io/localForage/',
+    releaseYear: 2014,
+    developer: 'Mozilla',
     runType: 'main.async',
     run: (sizeName: string, _sizeValue: number, payloads: { original: string; modified: string }): StorageStepDefinitions => {
+        const storeName = `bench_forage_${sizeName}_${Math.random().toString(36).slice(2, 7)}`;
         let lf: LocalForage;
-        const storeName = `bench_lf_${sizeName}_${Math.random().toString(36).slice(2, 7)}`;
-
         return {
             setup: async () => {
                 lf = localforage.createInstance({
@@ -20,6 +21,7 @@ export const localForageBenchmark: BenchmarkUnit = {
                     storeName: storeName
                 });
                 await lf.clear();
+                return { driverInfo: lf.driver() };
             },
             insert: async () => {
                 await lf.setItem('k', payloads.original);
