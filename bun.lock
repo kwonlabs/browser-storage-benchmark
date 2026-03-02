@@ -7,6 +7,7 @@
       "dependencies": {
         "@astrojs/svelte": "^7.2.5",
         "@bokuweb/zstd-wasm": "^0.0.27",
+        "@kwonlabs/openzl-wasm": "^0.1.0",
         "@lucide/astro": "^0.575.0",
         "@lucide/svelte": "^0.575.0",
         "@sqlite.org/sqlite-wasm": "^3.51.2-build6",
@@ -216,6 +217,8 @@
     "@jridgewell/trace-mapping": ["@jridgewell/trace-mapping@0.3.31", "", { "dependencies": { "@jridgewell/resolve-uri": "^3.1.0", "@jridgewell/sourcemap-codec": "^1.4.14" } }, "sha512-zzNR+SdQSDJzc8joaeP8QQoCQr8NuYx2dIIytl1QeBEZHJ9uW6hebsrYgbz8hJwUQao3TWCMtmfV8Nu1twOLAw=="],
 
     "@kurkle/color": ["@kurkle/color@0.3.4", "", {}, "sha512-M5UknZPHRu3DEDWoipU6sE8PdkZ6Z/S+v4dD+Ke8IaNlpdSQah50lz1KtcFBa2vsdOnwbbnxJwVM4wty6udA5w=="],
+
+    "@kwonlabs/openzl-wasm": ["@kwonlabs/openzl-wasm@0.1.0", "", {}, "sha512-AremmuXE3PPPvGwew9/yHXRFUvD18hNuwcieksi565PHsqTN/dY5CKCAyWLGV3qU3ESzKXqj3dL9KOnNpOFUhg=="],
 
     "@lucide/astro": ["@lucide/astro@0.575.0", "", { "peerDependencies": { "astro": "^4 || ^5" } }, "sha512-hU47BbgApVR473CxSk6C4OBxqO0P91ZrY9uYvQB7xqW9f5mqmkz1RJ4jl2iK2LovntrrfAZix5ce+r7v2+2gHg=="],
 

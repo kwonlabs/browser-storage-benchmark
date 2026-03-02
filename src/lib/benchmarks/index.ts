@@ -9,6 +9,7 @@ import { gzipBenchmark } from "./units/compression/gzip";
 import { deflateBenchmark } from "./units/compression/deflate";
 import { deflateRawBenchmark } from "./units/compression/deflate-raw";
 import { msgpackBenchmark } from "./units/compression/msgpack";
+import { openzlBenchmark } from "./units/compression/openzl";
 
 import { cookieBenchmark } from "./units/storage/cookie";
 import { sessionStorageBenchmark } from "./units/storage/session-storage";
@@ -55,11 +56,12 @@ export const allBenchmarks: BenchmarkUnit[] = [
   gzipBenchmark, // RFC 1952 (1996)
   bzip2Benchmark, // 1996
   lzmaBenchmark, // 1998
+  msgpackBenchmark, // 2008 (Structured)
   snappyBenchmark, // 2011
   lz4Benchmark, // 2011
   brotliBenchmark, // 2013
   zstdBenchmark, // 2016
-  msgpackBenchmark, // 2008 (Structured)
+  openzlBenchmark, // 2024
 ];
 
 export function getBenchmarkById(id: string) {

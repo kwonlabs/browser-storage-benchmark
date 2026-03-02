@@ -20,6 +20,7 @@ fs.mkdirSync(dest, { recursive: true });
 const copies = [
   ["snappy-wasm/es/snappy_bg.wasm", "snappy_bg.wasm"],
   ["bzip2-wasm/bzip2-1.0.8/bzip2.wasm", "bzip2.wasm"],
+  ["@kwonlabs/openzl-wasm/openzl-wasm.wasm", "openzl-wasm.wasm"],
 ];
 
 for (const [src, name] of copies) {
