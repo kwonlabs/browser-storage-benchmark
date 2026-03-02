@@ -17,37 +17,47 @@ A high-performance benchmark suite designed to analyze the latency and compressi
 ## 🗄️ Supported Technologies
 
 ### Volatile Storage (<10MB)
-*Strictly for lightweight config and transient session data.*
+
+_Strictly for lightweight config and transient session data._
+
 - Cookie, SessionStorage, LocalStorage, store.js
 
 ### Persistent Storage (Native)
-*High-capacity asynchronous APIs for large datasets and binary blobs.*
+
+_High-capacity asynchronous APIs for large datasets and binary blobs._
+
 - Cache API, IndexedDB (IDB)
 - **OPFS (Async)**: Direct file system access.
 - **OPFS (Sync)**: High-performance synchronous I/O accessible via Web Workers.
 
 ### Persistent Library (Wrappers & DBs)
-*Abstracted data layers and embedded RELATIONAL/Document databases.*
+
+_Abstracted data layers and embedded RELATIONAL/Document databases._
+
 - **SQLite (Async / Sync)**: Full relational SQL via WASM with OPFS backend.
 - localForage, Dexie.js (IDB wrapper), PouchDB (Sync-ready)
 
 ### Compression Engines
+
 - ZIP (pako), Gzip, Deflate, Brotli (WASM), zstd (WASM)
 
 ## 📊 Benchmarking Strategy
 
 The suite evaluates storage scalability by running tasks across a standard payload spectrum:
+
 - **Small**: 128B, 1KB, 10KB (Latency-heavy)
 - **Large**: 100KB, 1MB, 10MB (Throughput-heavy)
-- **Extreme**: 100MB* , 1GB* (*Available in Advanced Mode*)
+- **Extreme**: 100MB* , 1GB* (_Available in Advanced Mode_)
 
 ## ⚙️ Getting Started
 
 ### Prerequisites
+
 - Node.js (v18+)
 - npm / yarn / pnpm / bun
 
 ### Installation
+
 ```bash
 git clone https://github.com/kwonlabs/browser-storage-benchmark.git
 cd browser-storage-benchmark
@@ -55,11 +65,13 @@ npm install
 ```
 
 ### Development
+
 ```bash
 npm run dev
 ```
 
 ### Build & Production
+
 ```bash
 npm run build
 ```

@@ -1,11 +1,11 @@
 {
-    "name": "browser-storage-benchmark",
-    "compatibility_date": "2024-11-01",
-    "assets": {
-        "directory": "./dist",
-        "not_found_handling": "single-page-application"
-    },
-    "observability": {
-        "enabled": true
-    }
+  "name": "browser-storage-benchmark",
+  "compatibility_date": "2024-11-01",
+  "assets": {
+    "directory": "./dist",
+    "not_found_handling": "single-page-application",
+  },
+  "observability": {
+    "enabled": true,
+  },
 }

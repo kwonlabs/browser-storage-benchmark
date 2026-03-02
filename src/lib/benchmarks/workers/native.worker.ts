@@ -1,41 +1,66 @@
-import { getBenchmarkById } from '../index';
-import { runStorageLifecycle, generatePayloadString } from '../benchmark';
-import type { StorageStepDefinitions } from '../types';
+import { getBenchmarkById } from "../index";
+import { runStorageLifecycle, generatePayloadString } from "../benchmark";
+import type { StorageStepDefinitions } from "../types";
 
 self.onmessage = async (e: MessageEvent) => {
-    const { unitId, sizeName, sizeValue, payloadType = 'repetitive', iterations = 1 } = e.data;
-    const unit = getBenchmarkById(unitId);
+  const {
+    unitId,
+    sizeName,
+    sizeValue,
+    payloadType = "repetitive",
+    iterations = 1,
+  } = e.data;
+  const unit = getBenchmarkById(unitId);
 
-    if (!unit) {
-        self.postMessage({ error: `Unit ${unitId} not found` });
-        return;
-    }
+  if (!unit) {
+    self.postMessage({ error: `Unit ${unitId} not found` });
+    return;
+  }
 
-    try {
-        const original = generatePayloadString(sizeValue, payloadType);
-        const modified = original + 'm';
-        const steps = unit.run(sizeName, sizeValue, { original, modified }) as StorageStepDefinitions;
+  try {
+    const original = generatePayloadString(sizeValue, payloadType);
+    const modified = original + "m";
+    const steps = unit.run(sizeName, sizeValue, {
+      original,
+      modified,
+    }) as StorageStepDefinitions;
 
-        const result = await runStorageLifecycle(sizeValue, steps, { original, modified }, unit.name, iterations, (step, i, dur) => {
-            self.postMessage({ type: 'iteration_progress', unitId, step, iteration: i, total: iterations, sizeName, payloadType, duration: dur });
-        });
-
+    const result = await runStorageLifecycle(
+      sizeValue,
+      steps,
+      { original, modified },
+      unit.name,
+      iterations,
+      (step, i, dur) => {
         self.postMessage({
-            type: 'done_native',
-            unitId,
-            sizeName,
-            payloadType,
-            result
+          type: "iteration_progress",
+          unitId,
+          step,
+          iteration: i,
+          total: iterations,
+          sizeName,
+          payloadType,
+          duration: dur,
         });
-    } catch (err: any) {
-        console.error('Native Storage Worker Error:', err);
-        self.postMessage({
-            type: 'done_native',
-            unitId,
-            sizeName,
-            payloadType,
-            error: err.message || err.toString(),
-            result: { insert: -1, read: -1, update: -1, delete: -1 }
-        });
-    }
+      }
+    );
+
+    self.postMessage({
+      type: "done_native",
+      unitId,
+      sizeName,
+      payloadType,
+      result,
+    });
+  } catch (err: any) {
+    console.error("Native Storage Worker Error:", err);
+    self.postMessage({
+      type: "done_native",
+      unitId,
+      sizeName,
+      payloadType,
+      error: err.message || err.toString(),
+      result: { insert: -1, read: -1, update: -1, delete: -1 },
+    });
+  }
 };

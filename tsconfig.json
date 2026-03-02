@@ -2,11 +2,7 @@
   "extends": "astro/tsconfigs/strictest",
   "compilerOptions": {
     "target": "ES2022",
-    "lib": [
-      "ES2022",
-      "DOM",
-      "DOM.Iterable"
-    ],
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
     "skipLibCheck": true,
     "moduleResolution": "bundler",
     "verbatimModuleSyntax": true,
@@ -14,9 +10,5 @@
     "strict": true,
     "noFallthroughCasesInSwitch": true
   },
-  "include": [
-    "src",
-    "astro.config.mjs",
-    ".astro/types.d.ts"
-  ]
+  "include": ["src", "astro.config.mjs", ".astro/types.d.ts"]
 }

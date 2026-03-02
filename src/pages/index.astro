@@ -4,47 +4,47 @@ import TechGuide from "../components/TechGuide.astro";
 ---
 
 <Layout title="Browser Storage Benchmark">
-    <section class="hero-section">
-        <h1>Browser Storage Benchmark</h1>
-        <p>
-            Analyze latency and compression efficiency performance of modern web
-            browser storage technologies.
-        </p>
-        <div
-            class="hero-actions"
-            style="display: flex; gap: 1.5rem; justify-content: center; margin-top: 3rem;"
-        >
-            <a
-                href="/storage?run=default"
-                class="btn-primary-large"
-                style="background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));"
-            >
-                ▶ Storage Benchmark
-            </a>
-            <a
-                href="/compression?run=default"
-                class="btn-primary-large"
-                style="background: linear-gradient(135deg, #a78bfa, #f472b6); border: none; box-shadow: 0 10px 25px -5px rgba(167, 139, 250, 0.4);"
-            >
-                ▶ Compression Benchmark
-            </a>
-        </div>
-    </section>
+  <section class="hero-section">
+    <h1>Browser Storage Benchmark</h1>
+    <p>
+      Analyze latency and compression efficiency performance of modern web
+      browser storage technologies.
+    </p>
+    <div
+      class="hero-actions"
+      style="display: flex; gap: 1.5rem; justify-content: center; margin-top: 3rem;"
+    >
+      <a
+        href="/storage?run=default"
+        class="btn-primary-large"
+        style="background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));"
+      >
+        ▶ Storage Benchmark
+      </a>
+      <a
+        href="/compression?run=default"
+        class="btn-primary-large"
+        style="background: linear-gradient(135deg, #a78bfa, #f472b6); border: none; box-shadow: 0 10px 25px -5px rgba(167, 139, 250, 0.4);"
+      >
+        ▶ Compression Benchmark
+      </a>
+    </div>
+  </section>
 
-    <section class="intro-section">
-        <div class="section-divider">
-            <span>Browser Storage &amp; Compression Guide</span>
-        </div>
-        <div class="section-intro">
-            <p>
-                Modern browsers offer a diverse ecosystem of internal storage
-                mechanisms. Selecting the optimal persistence strategy and
-                compression algorithm tailored to your data's characteristics is
-                critical for performance. Below is an overview of the various
-                storage engines, wrapper libraries, and compression
-                methodologies available within the browser environment.
-            </p>
-        </div>
-        <TechGuide />
-    </section>
+  <section class="intro-section">
+    <div class="section-divider">
+      <span>Browser Storage &amp; Compression Guide</span>
+    </div>
+    <div class="section-intro">
+      <p>
+        Modern browsers offer a diverse ecosystem of internal storage
+        mechanisms. Selecting the optimal persistence strategy and compression
+        algorithm tailored to your data's characteristics is critical for
+        performance. Below is an overview of the various storage engines,
+        wrapper libraries, and compression methodologies available within the
+        browser environment.
+      </p>
+    </div>
+    <TechGuide />
+  </section>
 </Layout>

@@ -97,12 +97,12 @@ const {
         if (navHome && navStorage && navCompression) {
           navHome.classList.toggle(
             "active",
-            path === "/" || path === "/index.html",
+            path === "/" || path === "/index.html"
           );
           navStorage.classList.toggle("active", path.startsWith("/storage"));
           navCompression.classList.toggle(
             "active",
-            path.startsWith("/compression"),
+            path.startsWith("/compression")
           );
         }
 

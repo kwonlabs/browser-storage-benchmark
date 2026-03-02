@@ -4,27 +4,27 @@ import type { BenchmarkCategory } from "../lib/benchmarks/metadata.ts";
 import GuideCard from "./GuideCard.astro";
 
 interface Props {
-    sec: BenchmarkCategory;
+  sec: BenchmarkCategory;
 }
 const { sec } = Astro.props;
 
 const units = benchmarkMetadata.filter((b) =>
-    sec.categories.includes(b.category),
+  sec.categories.includes(b.category)
 );
 ---
 
 {
-    units.length > 0 && (
-        <section class="guide-group">
-            <div class="group-header">
-                <h3>{sec.title}</h3>
-                <p set:html={sec.desc} />
-            </div>
-            <div class="guide-grid-large">
-                {units.map((unit) => (
-                    <GuideCard unit={unit} />
-                ))}
-            </div>
-        </section>
-    )
+  units.length > 0 && (
+    <section class="guide-group">
+      <div class="group-header">
+        <h3>{sec.title}</h3>
+        <p set:html={sec.desc} />
+      </div>
+      <div class="guide-grid-large">
+        {units.map((unit) => (
+          <GuideCard unit={unit} />
+        ))}
+      </div>
+    </section>
+  )
 }

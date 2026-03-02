@@ -4,12 +4,12 @@ import StorageDashboard from "../components/report/StorageDashboard.svelte";
 ---
 
 <Layout
-    title="Storage Benchmark — Browser Storage"
-    description="Analyze IndexedDB, OPFS, SQLite, and other browser storage performance with detailed charts."
+  title="Storage Benchmark — Browser Storage"
+  description="Analyze IndexedDB, OPFS, SQLite, and other browser storage performance with detailed charts."
 >
-    <section id="tab-storage" class="tab-content active">
-        <div class="report-container">
-            <StorageDashboard client:only="svelte" />
-        </div>
-    </section>
+  <section id="tab-storage" class="tab-content active">
+    <div class="report-container">
+      <StorageDashboard client:only="svelte" />
+    </div>
+  </section>
 </Layout>
